@@ -1,22 +1,20 @@
 class movableObject {
-    x;
-    y;
+  x;
+  y;
 
-    img;
-    height;
-    width;
-    zIndex=3; // Default z-index for movable objects
+  img;
+  height;
+  width;
 
-    loadImage(path) {
-        this.img = new Image();
-        this.img.src = path;
-    }
+  loadImage(path) {
+    this.img = new Image();
+    this.img.src = path;
+  }
 
-     moveRight() {
-        this.x += 5;
-    }
-    moveLeft() {
-        this.x -= 5;      
-    }
-   
+  moveRight() {
+    this.x += 5;
+  }
+  moveLeft() {
+    this.x -= 5;
+  }
 }
