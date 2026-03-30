@@ -15,39 +15,51 @@ function init() {
 }
 
 window.addEventListener("keydown", (event) => {
-    if(event.key == "ArrowLeft") {
-        keyboard.LEFT = true;
+    switch (event.code) {
+        case "ArrowLeft":
+            keyboard.LEFT = true;
+            event.preventDefault();
+            break;
+        case "ArrowRight":
+            keyboard.RIGHT = true;
+            event.preventDefault();
+            break;
+        case "ArrowUp":
+            keyboard.UP = true;
+            event.preventDefault();
+            break;
+        case "ArrowDown":
+            keyboard.DOWN = true;
+            event.preventDefault();
+            break;
+        case "Space":
+            keyboard.SPACE = true;
+            event.preventDefault();
+            break;
     }
-    if(event.key == "ArrowRight") {
-        keyboard.RIGHT = true;
-    }
-    if(event.key == "ArrowUp") {
-        keyboard.UP = true;
-    }
-    if(event.key == "ArrowDown") {
-        keyboard.DOWN = true;
-    }
-    if(event.key == " ") {
-        keyboard.SPACE = true;
-    }
-
 });
 
 window.addEventListener("keyup", (event) => {
-    if(event.key == "ArrowLeft") {
-        keyboard.LEFT = false;
+    switch (event.code) {
+        case "ArrowLeft":
+            keyboard.LEFT = false;
+            event.preventDefault();
+            break;
+        case "ArrowRight":
+            keyboard.RIGHT = false;
+            event.preventDefault();
+            break;
+        case "ArrowUp":
+            keyboard.UP = false;
+            event.preventDefault();
+            break;
+        case "ArrowDown":
+            keyboard.DOWN = false;
+            event.preventDefault();
+            break;
+        case "Space":
+            keyboard.SPACE = false;
+            event.preventDefault();
+            break;
     }
-    if(event.key == "ArrowRight") {
-        keyboard.RIGHT = false;
-    }
-    if(event.key == "ArrowUp") {
-        keyboard.UP = false;
-    }
-    if(event.key == "ArrowDown") {
-        keyboard.DOWN = false;
-    }
-    if(event.key == " ") {
-        keyboard.SPACE = false;
-    }
-    speed = 0;
 });
