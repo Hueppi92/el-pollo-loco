@@ -1,18 +1,20 @@
+
 let canvas;
 let world;
 let keyboard = new Keyboard();
+let gameStarted = false;
 
-function init() {
+function startGame() {
+    document.getElementById('startScreenOverlay').style.display = 'none';
     canvas = document.getElementById("canvas");
-     world = new World(canvas, keyboard);
-
+    world = new World(canvas, keyboard);
     ctx = canvas.getContext("2d");
-
-   
-
-    console.log('my Character', world.character);
-    console.log('my Enemies', world.enemies);
+    gameStarted = true;
 }
+
+window.onload = function() {
+    document.getElementById('startGameBtn').onclick = startGame;
+};
 
 window.addEventListener("keydown", (event) => {
     switch (event.code) {

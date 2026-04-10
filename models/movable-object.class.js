@@ -10,7 +10,8 @@ class movableObject {
   otherDirection = false;
   speedY = 0;
   acceleration = 0.0;
-  groundY = 155;
+  groundY = 140;
+  health = 100;
 
   isAboveGround() {
     return this.y < this.groundY;
@@ -41,8 +42,22 @@ class movableObject {
       this.imageCache[path] = img;
     });
   }
+
+  draw(ctx) {
+    ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+  }
+
+  drawFrame(ctx) {
+    if (this instanceof Character || this instanceof Chicken) {
+    ctx.beginPath();
+    ctx.lineWidth = "5";
+    ctx.strokeStyle = "blue";
+    ctx.rect(this.x, this.y, this.width, this.height);
+    ctx.stroke();
+  }}
   playAnimation(images) {
-    let i = this.currentImage % this.IMAGES_WALKING.length;
+    if (!images || images.length === 0) return;
+    let i = this.currentImage % images.length;
     let path = images[i];
     this.img = this.imageCache[path];
     this.currentImage++;
@@ -59,4 +74,16 @@ class movableObject {
       this.x -= this.speed;
     }, 1000 / 60);
   }
+//Character.isColliding(chicken)
+  isColliding(mo) {
+    return (
+      this.x + this.width > mo.x &&
+      this.x < mo.x + mo.width &&
+      this.y + this.height > mo.y &&
+      this.y < mo.y + mo.height
+    );
+  }
+  
+ 
+  
 }

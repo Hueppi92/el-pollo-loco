@@ -1,7 +1,8 @@
 class Character extends movableObject {
+  hurtTimestamp = 0;
   canJump = true;
   x = 50;
-  y = 155;
+  y = 145;
   width = 110;
   height = 280;
 
@@ -35,14 +36,31 @@ IMAGES_JUMPING = [
   "/img/2_character_pepe/3_jump/J-39.png",
 ];
 
+IMAGES_HURT = [
+  "/img/2_character_pepe/4_hurt/H-41.png",
+  "/img/2_character_pepe/4_hurt/H-42.png",
+  "/img/2_character_pepe/4_hurt/H-43.png"
+];
+
+IMAGES_DEAD = [
+  '/img/2_character_pepe/5_dead/D-51.png',
+  '/img/2_character_pepe/5_dead/D-52.png',
+  '/img/2_character_pepe/5_dead/D-53.png',
+  '/img/2_character_pepe/5_dead/D-54.png',
+  '/img/2_character_pepe/5_dead/D-55.png',
+  '/img/2_character_pepe/5_dead/D-56.png',
+  '/img/2_character_pepe/5_dead/D-57.png'
+];
 
 SOUNDS_PEPE = [
-  "/audio/pepe/walking.mp3",
-  "/audio/pepe/jump.mp3"
+  "/audio/pepe/walking1.mp3",
+  "/audio/pepe/jump.mp3",
+  "/audio/pepe/ouch.mp3"
 ];
 
 walking_sound = new Audio(this.SOUNDS_PEPE[0]);
 jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
+hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
 
   world;
   currentImage = 0;
@@ -54,6 +72,8 @@ jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
     this.loadImages(this.IMAGES_IDLE);
     this.loadImages(this.IMAGES_WALKING);
     this.loadImages(this.IMAGES_JUMPING);
+    this.loadImages(this.IMAGES_HURT);
+    this.loadImages(this.IMAGES_DEAD);
     this.applyGravity();
     this.animate();
   }
@@ -65,6 +85,13 @@ jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
 
   updateCharacter() {
     if (!this.world) return;
+    if (this.health <= 0) {
+      // Pause all character sounds
+      if (this.walking_sound && !this.walking_sound.paused) this.walking_sound.pause();
+      if (this.jumping_sound && !this.jumping_sound.paused) this.jumping_sound.pause();
+      if (this.hurt_sound && !this.hurt_sound.paused) this.hurt_sound.pause();
+      return;
+    }
     let isWalking = this.handleMovement();
     this.handleWalkingSound(isWalking);
     this.handleJump();
@@ -112,6 +139,31 @@ jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
     }
   }
 
+  handleHurt() {
+    if (this.health <= 0 && !this.deadPlayed) {
+      this.deadPlayed = true;
+      this.playAnimation(this.IMAGES_DEAD);
+      // Optionally, stop movement or trigger game over logic here
+      return;
+    }
+    this.playAnimation(this.IMAGES_HURT);
+    this.hurt_sound.currentTime = 0;
+    this.hurt_sound.play();
+    this.hurtTimestamp = Date.now();
+  }
+
+
+
+
+  isHurt() {
+    return Date.now() - this.hurtTimestamp < 500;
+  }
+
+isDead() {
+   
+      return true;
+    } 
+
   updateIdleState(isWalking) {
     if (isWalking || this.isAboveGround()) {
       this.lastMoveTime = Date.now();
@@ -120,6 +172,8 @@ jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
       this.isIdleLong = true;
     }
   }
+
+
 
   updateCamera() {
     const followOffset = 100;
@@ -130,6 +184,10 @@ jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
 
   updateAnimation() {
     if (!this.world) return;
+    if (this.health <= 0) {
+      this.playAnimation(this.IMAGES_DEAD);
+      return;
+    }
     if (this.isAboveGround()) {
       this.playAnimation(this.IMAGES_JUMPING);
     } else if ((this.world.keyboard.RIGHT || this.world.keyboard.LEFT)) {

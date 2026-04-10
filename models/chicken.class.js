@@ -5,7 +5,7 @@ class Chicken extends movableObject {
     "img/3_enemies_chicken/chicken_normal/1_walk/3_w.png",
   ];
 
-  y = 340; // Ground level for the chicken
+  y = 335; // Ground level for the chicken
   width = 70;
   height = 80;
 
