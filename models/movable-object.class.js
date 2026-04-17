@@ -46,6 +46,10 @@ class movableObject extends DrawableObject {
       this.y < mo.y + mo.height
     );
   }
+
+  isFallingOnTop(mo) {
+    return this.isAboveGround() && this.speedY < 0 && this.y + this.height < mo.y + mo.height / 2;
+  }
   
  handleDamage(amount) {
     this.health -= amount;

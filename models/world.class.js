@@ -7,6 +7,10 @@ class World {
   statusbar = new Statusbar();
 
 
+  //setting for damage dealt (enemy damage and character damage)
+  enemyDamage = 5;
+  characterDamage = 5;
+
   ctx;
   canvas;
   keyboard;
@@ -88,15 +92,35 @@ class World {
   checkCollisions() {
     setInterval(() => {
       this.level.enemies.forEach((enemy) => {
-        if (
-          this.character.isColliding(enemy) &&
-          !this.character.isHurt() &&
-          !this.character.isDead()
-        ) {
-          this.character.handleDamage(20);
-          this.character.handleHurt();
+        if (enemy.isDead()) return;
+        if (this.character.isColliding(enemy) && !this.character.isDead()) {
+          this.handleEnemyCollision(enemy);
         }
       });
     }, 100);
+  }
+
+  handleEnemyCollision(enemy) {
+    if (this.character.isFallingOnTop(enemy)) {
+      this.handleDamageToEnemy(enemy);
+    } else {
+      this.handleDamageToCharacter();
+    }
+  }
+
+  handleDamageToEnemy(enemy) {
+    enemy.health = 0;
+    this.character.speedY = 15;
+    setTimeout(() => {
+      const i = this.level.enemies.indexOf(enemy);
+      if (i !== -1) this.level.enemies.splice(i, 1);
+    }, 500);
+  }
+
+  handleDamageToCharacter() {
+    if (!this.character.isHurt()) {
+      this.character.handleDamage(this.enemyDamage);
+      this.character.handleHurt();
+    }
   }
 }
