@@ -86,7 +86,6 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
   updateCharacter() {
     if (!this.world) return;
     if (this.health <= 0) {
-      // Pause all character sounds
       if (this.walking_sound && !this.walking_sound.paused) this.walking_sound.pause();
       if (this.jumping_sound && !this.jumping_sound.paused) this.jumping_sound.pause();
       if (this.hurt_sound && !this.hurt_sound.paused) this.hurt_sound.pause();
@@ -140,19 +139,15 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
   }
 
   handleHurt() {
-    if (this.health <= 0 && !this.deadPlayed) {
-      this.deadPlayed = true;
-      this.playAnimation(this.IMAGES_DEAD);
-      // Optionally, stop movement or trigger game over logic here
-      return;
+    if(this.health <=0 ) {
+      this.isDead();
     }
     this.playAnimation(this.IMAGES_HURT);
     this.hurt_sound.currentTime = 0;
     this.hurt_sound.play();
     this.hurtTimestamp = Date.now();
+    this.world.statusbar.setPercentage(this.health);
   }
-
-
 
 
   isHurt() {
@@ -161,7 +156,7 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
 
 isDead() {
    
-      return true;
+      return this.health <= 0;
     } 
 
   updateIdleState(isWalking) {

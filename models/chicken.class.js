@@ -8,6 +8,7 @@ class Chicken extends movableObject {
   y = 335; // Ground level for the chicken
   width = 70;
   height = 80;
+  health = 1;
 
   constructor() {
     super();

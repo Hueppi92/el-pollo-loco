@@ -12,9 +12,7 @@ function startGame() {
     gameStarted = true;
 }
 
-window.onload = function() {
-    document.getElementById('startGameBtn').onclick = startGame;
-};
+
 
 window.addEventListener("keydown", (event) => {
     switch (event.code) {
