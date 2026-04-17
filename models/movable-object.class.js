@@ -48,7 +48,7 @@ class movableObject extends DrawableObject {
   }
 
   isFallingOnTop(mo) {
-    return this.speedY < 0 && this.y + this.height < mo.y + mo.height / 2;
+    return this.speedY < 0 && this.y + this.height < mo.y + mo.height;
   }
 
   isDead() {
