@@ -4,7 +4,14 @@ class World {
   clouds = level1.clouds;
   level= level1
   backgroundObjects = level1.backgroundObjects;
-  statusbar = new Statusbar();
+  statusbarHealth = new Statusbar();
+  statusbarCoin = new StatusbarCoin();
+  statusbarBottle = new StatusbarBottle();
+
+  throwableObjects = [];
+  collectedBottles = 0;
+  maxBottles = 5;
+  canThrow = true;
 
 
   //setting for damage dealt (enemy damage and character damage)
@@ -30,6 +37,10 @@ class World {
     this.bg_audio.volume = 0.3;
     this.bg_audio.play();
     this.checkCollisions();
+    this.checkBottleCollect();
+    this.checkBottleBoxCollect();
+    this.checkBottleHitEnemy();
+    this.checkThrow();
   }
 
   setWorld() {
@@ -43,11 +54,16 @@ class World {
 
     this.addObjectsToMap(this.backgroundObjects);
     this.addObjectsToMap(this.clouds);
+    this.addObjectsToMap(this.level.bottles);
+    this.addObjectsToMap(this.level.bottleBoxes);
     this.addObjectsToMap(this.enemies);
+    this.addObjectsToMap(this.throwableObjects);
     this.addToMap(this.character);
 
     this.ctx.translate(-this.camera_x, 0);
-    this.addToMap(this.statusbar);
+    this.addToMap(this.statusbarHealth);
+    this.addToMap(this.statusbarCoin);
+    this.addToMap(this.statusbarBottle);
     if (!this.endSoundPlayed && this.character.x > this.level_end_x - 800) {
       this.bg_audio.pause();
       this.endSound.play();
@@ -122,5 +138,65 @@ class World {
       this.character.handleDamage(this.enemyDamage);
       this.character.handleHurt();
     }
+  }
+
+  checkBottleCollect() {
+    setInterval(() => {
+      this.level.bottles = this.level.bottles.filter(bottle => {
+        if (this.character.isColliding(bottle) && this.collectedBottles < this.maxBottles) {
+          this.collectedBottles++;
+          this.statusbarBottle.setPercentage(this.collectedBottles * 20);
+          return false;
+        }
+        return true;
+      });
+    }, 100);
+  }
+
+  checkBottleBoxCollect() {
+    setInterval(() => {
+      this.level.bottleBoxes = this.level.bottleBoxes.filter(box => {
+        if (this.character.isColliding(box)) {
+          this.collectedBottles = this.maxBottles;
+          this.statusbarBottle.setPercentage(100);
+          return false;
+        }
+        return true;
+      });
+    }, 100);
+  }
+
+  checkBottleHitEnemy() {
+    setInterval(() => {
+      this.throwableObjects.forEach(bottle => {
+        if (bottle.markedForDeletion) return;
+        this.level.enemies.forEach(enemy => {
+          if (enemy.isDead()) return;
+          if (bottle.isColliding(enemy)) {
+            enemy.health = 0;
+            bottle.splash();
+            setTimeout(() => {
+              const i = this.level.enemies.indexOf(enemy);
+              if (i !== -1) this.level.enemies.splice(i, 1);
+            }, 500);
+          }
+        });
+      });
+    }, 100);
+  }
+
+  checkThrow() {
+    setInterval(() => {
+      if (this.keyboard.D && this.canThrow && this.collectedBottles > 0) {
+        const direction = this.character.otherDirection ? -1 : 1;
+        const bottle = new ThrowableObject(this.character.x + 50, this.character.y + 100, direction);
+        this.throwableObjects.push(bottle);
+        this.collectedBottles--;
+        this.statusbarBottle.setPercentage(this.collectedBottles * 20);
+        this.canThrow = false;
+        setTimeout(() => this.canThrow = true, 500);
+      }
+      this.throwableObjects = this.throwableObjects.filter(obj => !obj.markedForDeletion);
+    }, 100);
   }
 }

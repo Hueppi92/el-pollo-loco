@@ -146,7 +146,7 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
     this.hurt_sound.currentTime = 0;
     this.hurt_sound.play();
     this.hurtTimestamp = Date.now();
-    this.world.statusbar.setPercentage(this.health);
+    this.world.statusbarHealth.setPercentage(this.health);
   }
 
 
