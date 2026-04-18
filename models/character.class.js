@@ -1,74 +1,74 @@
 class Character extends movableObject {
   hurtTimestamp = 0;
-  canJump = true;
+  jumpAllowed = true;
   x = 50;
   y = 145;
   width = 110;
   height = 280;
 
   IMAGES_IDLE = [
-    "/img/2_character_pepe/1_idle/idle/I-1.png",
-    "/img/2_character_pepe/1_idle/idle/I-2.png",
-    "/img/2_character_pepe/1_idle/idle/I-3.png",
-    "/img/2_character_pepe/1_idle/idle/I-4.png",
-    "/img/2_character_pepe/1_idle/idle/I-5.png",
-    "/img/2_character_pepe/1_idle/idle/I-6.png",
-    "/img/2_character_pepe/1_idle/idle/I-7.png",
-    "/img/2_character_pepe/1_idle/idle/I-8.png",
+    "img/2_character_pepe/1_idle/idle/I-1.png",
+    "img/2_character_pepe/1_idle/idle/I-2.png",
+    "img/2_character_pepe/1_idle/idle/I-3.png",
+    "img/2_character_pepe/1_idle/idle/I-4.png",
+    "img/2_character_pepe/1_idle/idle/I-5.png",
+    "img/2_character_pepe/1_idle/idle/I-6.png",
+    "img/2_character_pepe/1_idle/idle/I-7.png",
+    "img/2_character_pepe/1_idle/idle/I-8.png",
   ];
 
   IMAGES_SLEEPING = [
-    "/img/2_character_pepe/1_idle/long_idle/I-11.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-12.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-13.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-14.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-15.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-16.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-17.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-18.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-19.png",
-    "/img/2_character_pepe/1_idle/long_idle/I-20.png",
+    "img/2_character_pepe/1_idle/long_idle/I-11.png",
+    "img/2_character_pepe/1_idle/long_idle/I-12.png",
+    "img/2_character_pepe/1_idle/long_idle/I-13.png",
+    "img/2_character_pepe/1_idle/long_idle/I-14.png",
+    "img/2_character_pepe/1_idle/long_idle/I-15.png",
+    "img/2_character_pepe/1_idle/long_idle/I-16.png",
+    "img/2_character_pepe/1_idle/long_idle/I-17.png",
+    "img/2_character_pepe/1_idle/long_idle/I-18.png",
+    "img/2_character_pepe/1_idle/long_idle/I-19.png",
+    "img/2_character_pepe/1_idle/long_idle/I-20.png",
   ];
   IMAGES_WALKING = [
-    "/img/2_character_pepe/2_walk/W-21.png",
-    "/img/2_character_pepe/2_walk/W-22.png",
-    "/img/2_character_pepe/2_walk/W-23.png",
-    "/img/2_character_pepe/2_walk/W-24.png",
-    "/img/2_character_pepe/2_walk/W-25.png",
-    "/img/2_character_pepe/2_walk/W-26.png",
+    "img/2_character_pepe/2_walk/W-21.png",
+    "img/2_character_pepe/2_walk/W-22.png",
+    "img/2_character_pepe/2_walk/W-23.png",
+    "img/2_character_pepe/2_walk/W-24.png",
+    "img/2_character_pepe/2_walk/W-25.png",
+    "img/2_character_pepe/2_walk/W-26.png",
   ];
 IMAGES_JUMPING = [
-  "/img/2_character_pepe/3_jump/J-31.png",
-  "/img/2_character_pepe/3_jump/J-32.png",
-  "/img/2_character_pepe/3_jump/J-33.png",
-  "/img/2_character_pepe/3_jump/J-34.png",
-  "/img/2_character_pepe/3_jump/J-35.png",
-  "/img/2_character_pepe/3_jump/J-36.png",
-  "/img/2_character_pepe/3_jump/J-37.png",
-  "/img/2_character_pepe/3_jump/J-38.png",
-  "/img/2_character_pepe/3_jump/J-39.png",
+  "img/2_character_pepe/3_jump/J-31.png",
+  "img/2_character_pepe/3_jump/J-32.png",
+  "img/2_character_pepe/3_jump/J-33.png",
+  "img/2_character_pepe/3_jump/J-34.png",
+  "img/2_character_pepe/3_jump/J-35.png",
+  "img/2_character_pepe/3_jump/J-36.png",
+  "img/2_character_pepe/3_jump/J-37.png",
+  "img/2_character_pepe/3_jump/J-38.png",
+  "img/2_character_pepe/3_jump/J-39.png",
 ];
 
 IMAGES_HURT = [
-  "/img/2_character_pepe/4_hurt/H-41.png",
-  "/img/2_character_pepe/4_hurt/H-42.png",
-  "/img/2_character_pepe/4_hurt/H-43.png"
+  "img/2_character_pepe/4_hurt/H-41.png",
+  "img/2_character_pepe/4_hurt/H-42.png",
+  "img/2_character_pepe/4_hurt/H-43.png"
 ];
 
 IMAGES_DEAD = [
-  '/img/2_character_pepe/5_dead/D-51.png',
-  '/img/2_character_pepe/5_dead/D-52.png',
-  '/img/2_character_pepe/5_dead/D-53.png',
-  '/img/2_character_pepe/5_dead/D-54.png',
-  '/img/2_character_pepe/5_dead/D-55.png',
-  '/img/2_character_pepe/5_dead/D-56.png',
-  '/img/2_character_pepe/5_dead/D-57.png'
+  'img/2_character_pepe/5_dead/D-51.png',
+  'img/2_character_pepe/5_dead/D-52.png',
+  'img/2_character_pepe/5_dead/D-53.png',
+  'img/2_character_pepe/5_dead/D-54.png',
+  'img/2_character_pepe/5_dead/D-55.png',
+  'img/2_character_pepe/5_dead/D-56.png',
+  'img/2_character_pepe/5_dead/D-57.png'
 ];
 
 SOUNDS_PEPE = [
-  "/audio/pepe/walking1.mp3",
-  "/audio/pepe/jump.mp3",
-  "/audio/pepe/ouch.mp3"
+  "audio/pepe/walking1.mp3",
+  "audio/pepe/jump.mp3",
+  "audio/pepe/ouch.mp3"
 ];
 
 walking_sound = new Audio(this.SOUNDS_PEPE[0]);
@@ -93,63 +93,45 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
   }
   animate() {
     this.speed = 5;
-    setStoppableInterval(() => this.updateCharacter(), 1000 / 60);
-    setStoppableInterval(() => this.updateAnimation(), 80);
+    setStoppableInterval(() => this.moveCharacter(), 1000 / 60);
+    setStoppableInterval(() => this.playCharacter(), 80);
   }
 
-  updateCharacter() {
-    if (!this.world) return;
-    if (this.health <= 0) {
-      if (this.walking_sound && !this.walking_sound.paused) this.walking_sound.pause();
-      if (this.jumping_sound && !this.jumping_sound.paused) this.jumping_sound.pause();
-      if (this.hurt_sound && !this.hurt_sound.paused) this.hurt_sound.pause();
-      return;
-    }
-    let isWalking = this.handleMovement();
-    this.handleWalkingSound(isWalking);
-    this.handleJump();
-    this.handleJumpReset();
-    this.updateIdleState(isWalking);
-    this.updateCamera();
+  moveCharacter() {
+    if (!this.world || this.isDead()) return;
+    this.walking_sound.playbackRate = 2.5;
+    this.walking_sound.pause();
+    if (this.canMoveRight()) this.moveRight();
+    if (this.canMoveLeft()) this.moveLeft();
+    if (this.canJump()) this.jump();
+    if (!this.jumpAllowed && !this.isAboveGround()) this.jumpAllowed = true;
+    this.updateIdleState();
+    const minCameraX = -(this.world.level_end_x - this.world.canvas.width);
+    this.world.camera_x = Math.max(minCameraX, Math.min(0, -this.x + 100));
   }
 
-  handleMovement() {
-    let moved = false;
-    if (this.world.keyboard.RIGHT && this.x < this.world.level_end_x - this.width) {
-      this.otherDirection = false;
-      this.x += this.speed;
-      moved = true;
-    }
-    if (this.world.keyboard.LEFT && this.x > 0) {
-      this.otherDirection = true;
-      this.x -= this.speed;
-      moved = true;
-    }
-    return moved;
+  canMoveRight() {
+    return this.world.keyboard.RIGHT && this.x < this.world.level_end_x - this.width;
   }
 
-  handleWalkingSound(isWalking) {
-    if (isWalking) {
-      if (this.walking_sound.paused) {
-        this.walking_sound.loop = true;
-        this.walking_sound.play();
-      }
-    } else {
-      this.walking_sound.pause();
-      this.walking_sound.currentTime = 0;
-    }
+  moveRight() {
+    super.moveRight();
+    this.otherDirection = false;
+    if (!this.isAboveGround()) this.walking_sound.play();
   }
 
-  handleJump() {
-    if (this.world.keyboard.UP && this.canJump && !this.isAboveGround()) {
-      this.jump();
-    }
+  canMoveLeft() {
+    return this.world.keyboard.LEFT && this.x > 0;
   }
 
-  handleJumpReset() {
-    if (!this.canJump && !this.isAboveGround()) {
-      this.canJump = true;
-    }
+  moveLeft() {
+    super.moveLeft();
+    this.otherDirection = true;
+    if (!this.isAboveGround()) this.walking_sound.play();
+  }
+
+  canJump() {
+    return this.world.keyboard.UP && this.jumpAllowed && !this.isAboveGround();
   }
 
   handleHurt() {
@@ -173,8 +155,9 @@ isDead() {
       return this.health <= 0;
     } 
 
-  updateIdleState(isWalking) {
-    if (isWalking || this.isAboveGround()) {
+  updateIdleState() {
+    const isMoving = this.world.keyboard.RIGHT || this.world.keyboard.LEFT || this.isAboveGround();
+    if (isMoving) {
       this.lastMoveTime = Date.now();
       this.isIdleLong = false;
     } else if (Date.now() - this.lastMoveTime > 5000) {
@@ -182,27 +165,13 @@ isDead() {
     }
   }
 
-
-
-  updateCamera() {
-    const followOffset = 100;
-    const minCameraX = -(this.world.level_end_x - this.world.canvas.width);
-    const targetCameraX = -this.x + followOffset;
-    this.world.camera_x = Math.max(minCameraX, Math.min(0, targetCameraX));
-  }
-
-  updateAnimation() {
+  playCharacter() {
     if (!this.world) return;
-    if (this.health <= 0) {
-      this.playAnimation(this.IMAGES_DEAD);
-      return;
-    }
-    if (this.isAboveGround()) {
-      this.playAnimation(this.IMAGES_JUMPING);
-    } else if ((this.world.keyboard.RIGHT || this.world.keyboard.LEFT)) {
+    if (this.isDead()) { this.playAnimation(this.IMAGES_DEAD); return; }
+    if (this.isHurt()) { this.playAnimation(this.IMAGES_HURT); return; }
+    if (this.isAboveGround()) { this.playAnimation(this.IMAGES_JUMPING); return; }
+    if (this.world.keyboard.RIGHT || this.world.keyboard.LEFT) {
       this.playAnimation(this.IMAGES_WALKING);
-    } else if (this.isHurt()) {
-      this.playAnimation(this.IMAGES_HURT);
     } else if (this.isIdleLong) {
       this.playAnimation(this.IMAGES_SLEEPING);
     } else {
@@ -210,7 +179,6 @@ isDead() {
     }
   }
   jump() {
-    // Play jumping sound
     if (this.jumping_sound) {
       this.jumping_sound.currentTime = 0;
       this.jumping_sound.play();
@@ -219,7 +187,6 @@ isDead() {
     this.acceleration = 0.8;
     this.y -= this.speedY;
     this.speedY -= this.acceleration;
-    this.canJump = false;
-    this.moved = true;
+    this.jumpAllowed = false;
   }
 }

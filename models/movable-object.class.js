@@ -27,15 +27,11 @@ class movableObject extends DrawableObject {
   // Drawing and image methods are now in DrawableObject
 
   moveRight() {
-    setStoppableInterval(() => {
-      this.x += this.speed;
-    }, 1000 / 60);
+    this.x += this.speed;
   }
 
   moveLeft() {
-    setStoppableInterval(() => {
-      this.x -= this.speed;
-    }, 1000 / 60);
+    this.x -= this.speed;
   }
 //Character.isColliding(chicken)
   isColliding(mo) {
