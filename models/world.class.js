@@ -11,6 +11,8 @@ class World {
   throwableObjects = [];
   collectedBottles = 0;
   maxBottles = 5;
+  collectedCoins = 0;
+  maxCoins = 8;
   canThrow = true;
 
 
@@ -25,13 +27,18 @@ class World {
   level_end_x = 2158;
   bg_audio = new Audio("audio/world_sounds/background.mp3");
   endSound = new Audio("audio/world_sounds/showdown.mp3");
+  winSound = new Audio("audio/world_sounds/winning.mp3");
+  loseSound = new Audio("audio/world_sounds/lost.mp3");
+  coinSound = new Audio("audio/world_sounds/coin_collect.mp3");
   endSoundPlayed = false;
 
   constructor(canvas, keyboard) {
     this.ctx = canvas.getContext("2d");
     this.canvas = canvas;
     this.keyboard = keyboard;
+    this.endboss = this.level.enemies.find(e => e instanceof Endboss);
     this.setWorld();
+    this.level.enemies.forEach(e => e.animate());
     this.draw();
     this.bg_audio.loop = true;
     this.bg_audio.volume = 0.3;
@@ -41,10 +48,13 @@ class World {
     this.checkBottleBoxCollect();
     this.checkBottleHitEnemy();
     this.checkThrow();
+    this.checkCoinCollect();
+    this.checkGameOver();
   }
 
   setWorld() {
     this.character.world = this;
+    if (this.endboss) this.endboss.world = this;
   }
 
   draw() {
@@ -56,6 +66,7 @@ class World {
     this.addObjectsToMap(this.clouds);
     this.addObjectsToMap(this.level.bottles);
     this.addObjectsToMap(this.level.bottleBoxes);
+    this.addObjectsToMap(this.level.coins);
     this.addObjectsToMap(this.enemies);
     this.addObjectsToMap(this.throwableObjects);
     this.addToMap(this.character);
@@ -67,9 +78,15 @@ class World {
     if (!this.endSoundPlayed && this.character.x > this.level_end_x - 800) {
       this.bg_audio.pause();
       this.endSound.play();
+      this.endSound.playbackRate = 1.0;
+      this.endSound.onended = () => {
+        this.bg_audio.playbackRate = 1.4;
+        this.bg_audio.play();
+      };
       this.endSoundPlayed = true;
+      if (this.endboss) this.endboss.activated = true;
     }
-    requestAnimationFrame(() => {
+    this._rafId = requestAnimationFrame(() => {
       this.draw();
     });
   }
@@ -106,7 +123,7 @@ class World {
   }
 
   checkCollisions() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       this.level.enemies.forEach((enemy) => {
         if (enemy.isDead()) return;
         if (this.character.isColliding(enemy) && !this.character.isDead()) {
@@ -118,7 +135,11 @@ class World {
 
   handleEnemyCollision(enemy) {
     if (this.character.isFallingOnTop(enemy)) {
-      this.handleDamageToEnemy(enemy);
+      if (enemy instanceof Endboss) {
+        this.character.speedY = 15;
+      } else {
+        this.handleDamageToEnemy(enemy);
+      }
     } else {
       this.handleDamageToCharacter();
     }
@@ -141,7 +162,7 @@ class World {
   }
 
   checkBottleCollect() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       this.level.bottles = this.level.bottles.filter(bottle => {
         if (this.character.isColliding(bottle) && this.collectedBottles < this.maxBottles) {
           this.collectedBottles++;
@@ -154,7 +175,7 @@ class World {
   }
 
   checkBottleBoxCollect() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       this.level.bottleBoxes = this.level.bottleBoxes.filter(box => {
         if (this.character.isColliding(box)) {
           this.collectedBottles = this.maxBottles;
@@ -167,27 +188,80 @@ class World {
   }
 
   checkBottleHitEnemy() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       this.throwableObjects.forEach(bottle => {
         if (bottle.markedForDeletion) return;
         this.level.enemies.forEach(enemy => {
           if (enemy.isDead()) return;
           if (bottle.isColliding(enemy)) {
-            enemy.health = 0;
-            bottle.splash();
-            setTimeout(() => {
-              const i = this.level.enemies.indexOf(enemy);
-              if (i !== -1) this.level.enemies.splice(i, 1);
-            }, 500);
+            if (enemy instanceof Endboss) {
+              if (!enemy.isCurrentlyHurt()) {
+                enemy.takeHit();
+                bottle.splash();
+              }
+              if (enemy.isDead()) {
+                setTimeout(() => {
+                  const i = this.level.enemies.indexOf(enemy);
+                  if (i !== -1) this.level.enemies.splice(i, 1);
+                }, 800);
+              }
+            } else {
+              enemy.health = 0;
+              bottle.splash();
+              setTimeout(() => {
+                const i = this.level.enemies.indexOf(enemy);
+                if (i !== -1) this.level.enemies.splice(i, 1);
+              }, 500);
+            }
           }
         });
       });
     }, 100);
   }
 
+  checkGameOver() {
+    setStoppableInterval(() => {
+      if (this.gameEnded) return;
+      if (this.character.isDead()) {
+        this.gameEnded = true;
+        setTimeout(() => this.showEndScreen('lose'), 1500);
+      } else if (this.endboss && this.endboss.isDead()) {
+        this.gameEnded = true;
+        setTimeout(() => this.showEndScreen('win'), 1500);
+      }
+    }, 200);
+  }
+
+  showEndScreen(result) {
+    const overlay = document.getElementById('endScreenOverlay');
+    const img = document.getElementById('endScreenImg');
+    img.src = result === 'win'
+      ? 'img/You won, you lost/You Won B.png'
+      : 'img/You won, you lost/You lost.png';
+    overlay.style.display = 'flex';
+    stopGame();
+    if (result === 'win') this.winSound.play();
+    else this.loseSound.play();
+  }
+
+  checkCoinCollect() {
+    setStoppableInterval(() => {
+      this.level.coins = this.level.coins.filter(coin => {
+        if (this.character.isColliding(coin)) {
+          this.collectedCoins++;
+          this.statusbarCoin.setPercentage(Math.min(this.collectedCoins / this.maxCoins * 100, 100));
+          this.coinSound.currentTime = 0;
+          this.coinSound.play();
+          return false;
+        }
+        return true;
+      });
+    }, 100);
+  }
+
   checkThrow() {
-    setInterval(() => {
-      if (this.keyboard.SPACE && this.canThrow && this.collectedBottles > 0) {
+    setStoppableInterval(() => {
+      if ((this.keyboard.D || this.keyboard.SPACE) && this.canThrow && this.collectedBottles > 0) {
         const direction = this.character.otherDirection ? -1 : 1;
         const bottle = new ThrowableObject(this.character.x + 50, this.character.y + 100, direction);
         this.throwableObjects.push(bottle);

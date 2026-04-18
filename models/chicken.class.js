@@ -23,7 +23,6 @@ class Chicken extends movableObject {
     this.loadImages(this.IMAGES_DEAD);
     this.x = 200 + Math.random() * 500; // Random x position between 400 and 900
     this.speed = 0.15 + Math.random() * 0.3; // Random speed between 0.15 and 0.45
-    this.animate();
   }
 
   isDead() {
@@ -31,11 +30,11 @@ class Chicken extends movableObject {
   }
 
   animate() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       if (!this.isDead()) this.x -= this.speed;
     }, 1000 / 60);
 
-    setInterval(() => {
+    setStoppableInterval(() => {
       if (this.isDead()) {
         this.playAnimation(this.IMAGES_DEAD);
         if (!this.deadSoundPlayed) {

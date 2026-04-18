@@ -16,6 +16,19 @@ class Character extends movableObject {
     "/img/2_character_pepe/1_idle/idle/I-7.png",
     "/img/2_character_pepe/1_idle/idle/I-8.png",
   ];
+
+  IMAGES_SLEEPING = [
+    "/img/2_character_pepe/1_idle/long_idle/I-11.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-12.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-13.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-14.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-15.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-16.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-17.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-18.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-19.png",
+    "/img/2_character_pepe/1_idle/long_idle/I-20.png",
+  ];
   IMAGES_WALKING = [
     "/img/2_character_pepe/2_walk/W-21.png",
     "/img/2_character_pepe/2_walk/W-22.png",
@@ -70,6 +83,7 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
   constructor() {
     super().loadImage("img/2_character_pepe/2_walk/W-21.png");
     this.loadImages(this.IMAGES_IDLE);
+    this.loadImages(this.IMAGES_SLEEPING);
     this.loadImages(this.IMAGES_WALKING);
     this.loadImages(this.IMAGES_JUMPING);
     this.loadImages(this.IMAGES_HURT);
@@ -79,8 +93,8 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
   }
   animate() {
     this.speed = 5;
-    setInterval(() => this.updateCharacter(), 1000 / 60);
-    setInterval(() => this.updateAnimation(), 80);
+    setStoppableInterval(() => this.updateCharacter(), 1000 / 60);
+    setStoppableInterval(() => this.updateAnimation(), 80);
   }
 
   updateCharacter() {
@@ -163,7 +177,7 @@ isDead() {
     if (isWalking || this.isAboveGround()) {
       this.lastMoveTime = Date.now();
       this.isIdleLong = false;
-    } else if (Date.now() - this.lastMoveTime > 3000) {
+    } else if (Date.now() - this.lastMoveTime > 5000) {
       this.isIdleLong = true;
     }
   }
@@ -187,15 +201,12 @@ isDead() {
       this.playAnimation(this.IMAGES_JUMPING);
     } else if ((this.world.keyboard.RIGHT || this.world.keyboard.LEFT)) {
       this.playAnimation(this.IMAGES_WALKING);
+    } else if (this.isHurt()) {
+      this.playAnimation(this.IMAGES_HURT);
+    } else if (this.isIdleLong) {
+      this.playAnimation(this.IMAGES_SLEEPING);
     } else {
-      if (this.isIdleLong) {
-        if (!this._lastIdleFrame || Date.now() - this._lastIdleFrame > 400) {
-          this.playAnimation(this.IMAGES_IDLE);
-          this._lastIdleFrame = Date.now();
-        }
-      } else {
-        this.playAnimation(this.IMAGES_IDLE);
-      }
+      this.playAnimation(this.IMAGES_IDLE);
     }
   }
   jump() {

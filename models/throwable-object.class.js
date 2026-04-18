@@ -36,7 +36,7 @@ class ThrowableObject extends movableObject {
     this.acceleration = 1;  // gentle gravity
     this.speedX = 12;       // horizontal speed per physics tick
 
-    setInterval(() => {
+    setStoppableInterval(() => {
       if (this.y >= this.groundY) {
         if (!this.isSplashing) this.splash();
       } else {
@@ -46,7 +46,7 @@ class ThrowableObject extends movableObject {
       }
     }, 1000 / 60);
 
-    this.animationInterval = setInterval(() => {
+    this.animationInterval = setStoppableInterval(() => {
       if (this.isSplashing) {
         this.playAnimation(this.IMAGES_SPLASH);
       } else {

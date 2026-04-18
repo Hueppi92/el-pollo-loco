@@ -12,7 +12,7 @@ class movableObject extends DrawableObject {
   }
 
   applyGravity() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       if (this.y > this.groundY) {
         this.y = this.groundY;
         this.speedY = 0;
@@ -27,13 +27,13 @@ class movableObject extends DrawableObject {
   // Drawing and image methods are now in DrawableObject
 
   moveRight() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       this.x += this.speed;
     }, 1000 / 60);
   }
 
   moveLeft() {
-    setInterval(() => {
+    setStoppableInterval(() => {
       this.x -= this.speed;
     }, 1000 / 60);
   }

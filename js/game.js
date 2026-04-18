@@ -1,67 +1,50 @@
-
 let canvas;
 let world;
-let keyboard = new Keyboard();
+let keyboard;
 let gameStarted = false;
+let intervalIds = [];
 
-function startGame() {
-    document.getElementById('startScreenOverlay').style.display = 'none';
-    canvas = document.getElementById("canvas");
-    world = new World(canvas, keyboard);
-    ctx = canvas.getContext("2d");
-    gameStarted = true;
+function setStoppableInterval(fn, time) {
+    let id = setInterval(fn, time);
+    intervalIds.push(id);
 }
 
-
-
-window.addEventListener("keydown", (event) => {
-    switch (event.code) {
-        case "ArrowLeft":
-            keyboard.LEFT = true;
-            event.preventDefault();
-            break;
-        case "ArrowRight":
-            keyboard.RIGHT = true;
-            event.preventDefault();
-            break;
-        case "ArrowUp":
-            keyboard.UP = true;
-            event.preventDefault();
-            break;
-        case "ArrowDown":
-            keyboard.DOWN = true;
-            event.preventDefault();
-            break;
-        case "Space":
-            keyboard.SPACE = true;
-            event.preventDefault();
-            break;
-   
+function stopGame() {
+    intervalIds.forEach(clearInterval);
+    intervalIds = [];
+    if (world) {
+        cancelAnimationFrame(world._rafId);
+        world.bg_audio.pause();
+        world.endSound.pause();
     }
-});
+}
 
-window.addEventListener("keyup", (event) => {
-    switch (event.code) {
-        case "ArrowLeft":
-            keyboard.LEFT = false;
-            event.preventDefault();
-            break;
-        case "ArrowRight":
-            keyboard.RIGHT = false;
-            event.preventDefault();
-            break;
-        case "ArrowUp":
-            keyboard.UP = false;
-            event.preventDefault();
-            break;
-        case "ArrowDown":
-            keyboard.DOWN = false;
-            event.preventDefault();
-            break;
-        case "Space":
-            keyboard.SPACE = false;
-            event.preventDefault();
-            break;
-       
+function startGame() {
+  keyboard = new Keyboard();
+  document.getElementById("startScreenOverlay").style.display = "none";
+  canvas = document.getElementById("canvas");
+  world = new World(canvas, keyboard);
+  ctx = canvas.getContext("2d");
+  gameStarted = true;
+}
+
+function toggleMute() {
+    const muted = world ? !world.bg_audio.muted : false;
+    const btn = document.getElementById('muteBtn');
+    if (world) {
+        world.bg_audio.muted = muted;
+        world.endSound.muted = muted;
+        world.coinSound.muted = muted;
     }
-});
+    document.querySelectorAll('audio').forEach(a => a.muted = muted);
+    btn.textContent = muted ? '🔇' : '🔊';
+}
+
+function toggleFullscreen() {
+    const container = document.getElementById('gameContainer');
+    if (!document.fullscreenElement) {
+        container.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
+}
