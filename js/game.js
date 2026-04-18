@@ -36,10 +36,7 @@ window.addEventListener("keydown", (event) => {
             keyboard.SPACE = true;
             event.preventDefault();
             break;
-        case "KeyD":
-            keyboard.D = true;
-            event.preventDefault();
-            break;
+   
     }
 });
 
@@ -65,9 +62,6 @@ window.addEventListener("keyup", (event) => {
             keyboard.SPACE = false;
             event.preventDefault();
             break;
-        case "KeyD":
-            keyboard.D = false;
-            event.preventDefault();
-            break;
+       
     }
 });

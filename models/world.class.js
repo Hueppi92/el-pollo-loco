@@ -85,9 +85,9 @@ class World {
       this.flipImage(mo);
     }
     mo.draw(this.ctx);
-    if (mo instanceof Character || mo instanceof Chicken) {
+   /*  if (mo instanceof Character || mo instanceof Chicken) {
       mo.drawFrame(this.ctx); // For debugging hitboxes
-    }
+    } */
     if (mo.otherDirection) {
       this.flipImageBack(mo);
     }
@@ -187,7 +187,7 @@ class World {
 
   checkThrow() {
     setInterval(() => {
-      if (this.keyboard.D && this.canThrow && this.collectedBottles > 0) {
+      if (this.keyboard.SPACE && this.canThrow && this.collectedBottles > 0) {
         const direction = this.character.otherDirection ? -1 : 1;
         const bottle = new ThrowableObject(this.character.x + 50, this.character.y + 100, direction);
         this.throwableObjects.push(bottle);
