@@ -204,14 +204,56 @@ html {
     cursor: pointer;
     letter-spacing: 0.05em;
 }
-body {
-    display:flex;
-    flex-direction: column;
-    align-items: center;
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT & RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
 
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100dvh;
+    background: transparent;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+footer {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-family: sans-serif;
+    font-size: 0.9em;
+}
+
+footer a {
+    color: #7a2e00;
+    text-decoration: none;
+    border-bottom: 1px solid #7a2e00;
+}
+
+footer a:hover {
+    color: #f0c000;
+    border-color: #f0c000;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────────────── */
 canvas {
     background-color: black;
+}
+
+/* ── Mute / Fullscreen buttons ───────────────────────────────────────────── */
+#gameButtons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 6px;
+    z-index: 99999;
 }
 
 #fullscreenBtn, #muteBtn {
@@ -233,19 +275,25 @@ canvas {
     background: rgba(255, 224, 102, 0.95);
 }
 
-#gameButtons {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+#menuBtn {
+    width: 38px;
+    height: 38px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 2px solid #7a2e00;
+    background: rgba(249, 211, 66, 0.85);
+    color: #7a2e00;
     display: flex;
-    gap: 6px;
-    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
-#topBar, #bottomBar {
-    display: none;
+#menuBtn:hover {
+    background: rgba(255, 224, 102, 0.95);
 }
 
+/* ── Fullscreen mode ─────────────────────────────────────────────────────── */
 #gameContainer:fullscreen {
     width: 100vw;
     height: 100vh;
@@ -269,6 +317,7 @@ canvas {
     margin: auto;
 }
 
+/* ── Mobile controls (shown via JS on touch devices) ─────────────────────── */
 #mobileControls {
     display: none;
     position: absolute;
@@ -289,8 +338,8 @@ canvas {
 }
 
 #mobileControls button {
-    width: 64px;
-    height: 64px;
+    width: clamp(52px, 9vw, 72px);
+    height: clamp(52px, 9vw, 72px);
     font-size: 0.65em;
     font-weight: bold;
     border-radius: 50%;
@@ -313,5 +362,93 @@ canvas {
 #mobileControls button:active {
     background: rgba(255, 180, 0, 0.95);
     transform: scale(0.93);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE – portrait: show rotate hint, hide everything else
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#rotateOverlay {
+    display: none;
+}
+
+@media (max-width: 1024px) and (orientation: portrait) {
+    html, body {
+        overflow: hidden;
+        height: 100dvh;
+    }
+
+    #rotateOverlay {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #1a0a00;
+    }
+
+    #rotateOverlay p {
+        color: #f9d342;
+        font-family: 'Rye', serif;
+        font-size: clamp(1rem, 4vw, 1.6rem);
+        text-align: center;
+        padding: 0 24px;
+        margin: 0;
+    }
+
+    #rotateIcon {
+        font-size: clamp(3rem, 12vw, 5rem);
+        animation: rotateHint 1.8s ease-in-out infinite;
+        transform-origin: center;
+        display: inline-block;
+    }
+
+    body > *:not(#rotateOverlay) {
+        visibility: hidden;
+    }
+}
+
+@keyframes rotateHint {
+    0%   { transform: rotate(0deg); }
+    40%  { transform: rotate(90deg); }
+    60%  { transform: rotate(90deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE – landscape: game fills the screen, no chrome
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) and (orientation: landscape) {
+    html, body {
+        overflow: hidden;
+        height: 100dvh;
+        justify-content: center;
+    }
+
+    h1, footer {
+        display: none;
+    }
+
+    body {
+        background: black;
+    }
+
+    #gameContainer {
+        /* Scale to fill the viewport while preserving 3:2 ratio */
+        width: min(100vw, calc(100dvh * 720 / 480));
+        height: min(100dvh, calc(100vw * 480 / 720));
+        max-width: unset;
+    }
+
+    /* Bigger touch buttons in landscape – scale with viewport height */
+    #mobileControls button {
+        width: clamp(48px, 9vh, 72px);
+        height: clamp(48px, 9vh, 72px);
+        font-size: clamp(0.55em, 1.5vh, 0.75em);
+    }
 }
 

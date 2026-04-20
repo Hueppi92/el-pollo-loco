@@ -1,39 +1,53 @@
+/**
+ * A generic, reusable status bar that can represent health, coins, bottles, or any
+ * percentage-based value. Pass the appropriate image set and position on construction.
+ * @extends DrawableObject
+ */
 class Statusbar extends DrawableObject {
-  
-  IMAGES = [
-    'img/7_statusbars/1_statusbar/2_statusbar_health/green/0.png',
-    'img/7_statusbars/1_statusbar/2_statusbar_health/green/20.png',
-    'img/7_statusbars/1_statusbar/2_statusbar_health/green/40.png',
-    'img/7_statusbars/1_statusbar/2_statusbar_health/green/60.png',
-    'img/7_statusbars/1_statusbar/2_statusbar_health/green/80.png',
-    'img/7_statusbars/1_statusbar/2_statusbar_health/green/100.png'
-  ];
+  /** @type {string[]} The six image paths for 0 / 20 / 40 / 60 / 80 / 100 %. */
+  IMAGES = [];
 
-percentage = 100;
+  /** @type {number} Current percentage value (0–100). */
+  percentage = 100;
 
-  constructor() {
+  /**
+   * @param {string[]} images - Array of exactly 6 image paths (0 % → 100 %).
+   * @param {number}   x      - Horizontal canvas position in pixels.
+   * @param {number}   y      - Vertical canvas position in pixels.
+   * @param {number}   [initialPercentage=100] - Starting percentage value.
+   */
+  constructor(images, x, y, initialPercentage = 100) {
     super();
+    this.IMAGES = images;
     this.loadImages(this.IMAGES);
-    this.setPercentage(100)
-    this.x = 20;
-    this.y = 10;
+    this.x = x;
+    this.y = y;
     this.width = 200;
     this.height = 50;
+    this.setPercentage(initialPercentage);
   }
 
+  /**
+   * Updates the displayed image to match the given percentage.
+   * @param {number} percentage - Value between 0 and 100.
+   */
+  setPercentage(percentage) {
+    this.percentage = percentage;
+    let index = this.resolveImageIndex();
+    this.img = this.imageCache[this.IMAGES[index]];
+  }
 
-setPercentage(percentage) {
-  this.percentage = percentage;
-  let index = this.resolveImageIndex();
-  this.img = this.imageCache[this.IMAGES[index]];
+  /**
+   * Maps the current percentage to an image-array index (0–5).
+   * @returns {number}
+   */
+  resolveImageIndex() {
+    if (this.percentage >= 100) return 5;
+    else if (this.percentage >= 80) return 4;
+    else if (this.percentage >= 60) return 3;
+    else if (this.percentage >= 40) return 2;
+    else if (this.percentage >= 20) return 1;
+    else return 0;
+  }
 }
-
-resolveImageIndex() {
-  if (this.percentage >= 100) return 5;
-  else if (this.percentage >= 80) return 4;
-  else if (this.percentage >= 60) return 3;
-  else if (this.percentage >= 40) return 2;
-  else if (this.percentage >= 20) return 1;
-  else return 0;
-}}
 

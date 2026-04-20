@@ -60,6 +60,10 @@ class Endboss extends movableObject {
     this.height = 450;
   }
 
+  /**
+   * Reduces the boss's health by 1 and starts the hurt cooldown.
+   * Has no effect if the boss is already dead.
+   */
   takeHit() {
     if (this.isDead()) return;
     this.health--;
@@ -68,10 +72,19 @@ class Endboss extends movableObject {
     this.hurt_sound.play();
   }
 
+  /**
+   * Returns true if the boss was hit within the last 600 ms (immune window).
+   * @returns {boolean}
+   */
   isCurrentlyHurt() {
     return Date.now() - this.hurtTimestamp < 600;
   }
 
+  /**
+   * Returns true when the character is within attack range of the boss.
+   * @param {Character} character - The player character.
+   * @returns {boolean}
+   */
   isNearCharacter(character) {
     return Math.abs(this.x - character.x) < this.attackRange;
   }

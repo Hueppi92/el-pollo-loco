@@ -1,12 +1,43 @@
 class World {
+  /** @type {string[]} Image paths for the health status bar (0–100 %). */
+  static HEALTH_IMAGES = [
+    'img/7_statusbars/1_statusbar/2_statusbar_health/green/0.png',
+    'img/7_statusbars/1_statusbar/2_statusbar_health/green/20.png',
+    'img/7_statusbars/1_statusbar/2_statusbar_health/green/40.png',
+    'img/7_statusbars/1_statusbar/2_statusbar_health/green/60.png',
+    'img/7_statusbars/1_statusbar/2_statusbar_health/green/80.png',
+    'img/7_statusbars/1_statusbar/2_statusbar_health/green/100.png',
+  ];
+
+  /** @type {string[]} Image paths for the coin status bar (0–100 %). */
+  static COIN_IMAGES = [
+    'img/7_statusbars/1_statusbar/1_statusbar_coin/green/0.png',
+    'img/7_statusbars/1_statusbar/1_statusbar_coin/green/20.png',
+    'img/7_statusbars/1_statusbar/1_statusbar_coin/green/40.png',
+    'img/7_statusbars/1_statusbar/1_statusbar_coin/green/60.png',
+    'img/7_statusbars/1_statusbar/1_statusbar_coin/green/80.png',
+    'img/7_statusbars/1_statusbar/1_statusbar_coin/green/100.png',
+  ];
+
+  /** @type {string[]} Image paths for the bottle status bar (0–100 %). */
+  static BOTTLE_IMAGES = [
+    'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/0.png',
+    'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/20.png',
+    'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/40.png',
+    'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/60.png',
+    'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/80.png',
+    'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/100.png',
+  ];
+
   character = new Character();
   enemies = level1.enemies;
   clouds = level1.clouds;
   level= level1
   backgroundObjects = level1.backgroundObjects;
-  statusbarHealth = new Statusbar();
-  statusbarCoin = new StatusbarCoin();
-  statusbarBottle = new StatusbarBottle();
+
+  /** @type {Statusbar} */ statusbarHealth;
+  /** @type {Statusbar} */ statusbarCoin;
+  /** @type {Statusbar} */ statusbarBottle;
 
   throwableObjects = [];
   collectedBottles = 0;
@@ -15,8 +46,6 @@ class World {
   maxCoins = 8;
   canThrow = true;
 
-
-  //setting for damage dealt (enemy damage and character damage)
   enemyDamage = 5;
   characterDamage = 5;
 
@@ -31,18 +60,65 @@ class World {
   loseSound = new Audio("audio/world_sounds/lost.mp3");
   coinSound = new Audio("audio/world_sounds/coin_collect.mp3");
   endSoundPlayed = false;
+  gameEnded = false;
 
+  /**
+   * @param {HTMLCanvasElement} canvas   - The game canvas element.
+   * @param {Keyboard}          keyboard - The keyboard input handler.
+   */
   constructor(canvas, keyboard) {
     this.ctx = canvas.getContext("2d");
     this.canvas = canvas;
     this.keyboard = keyboard;
     this.endboss = this.level.enemies.find(e => e instanceof Endboss);
+    this.initStatusbars();
     this.setWorld();
     this.level.enemies.forEach(e => e.animate());
     this.draw();
+    this.initAudio();
+    this.startIntervals();
+  }
+
+  /** Creates the three HUD status bars with their respective image sets and positions. */
+  initStatusbars() {
+    this.statusbarHealth = new Statusbar(World.HEALTH_IMAGES, 20, 10, 100);
+    this.statusbarCoin   = new Statusbar(World.COIN_IMAGES,   20, 68, 0);
+    this.statusbarBottle = new Statusbar(World.BOTTLE_IMAGES, 20, 126, 0);
+  }
+
+  /** Assigns the world reference to the character and endboss. */
+  setWorld() {
+    this.character.world = this;
+    if (this.endboss) this.endboss.world = this;
+  }
+
+  /** Starts and configures the background audio. */
+  initAudio() {
     this.bg_audio.loop = true;
     this.bg_audio.volume = 0.3;
     this.bg_audio.play();
+  }
+
+  /**
+   * Mutes or unmutes every audio object in the game world, including character sounds.
+   * @param {boolean} muted - Whether to mute all sounds.
+   */
+  muteAllSounds(muted) {
+    const sounds = [
+      this.bg_audio, this.endSound, this.winSound,
+      this.loseSound, this.coinSound,
+      this.character.walking_sound, this.character.jumping_sound, this.character.hurt_sound,
+    ];
+    sounds.forEach(s => s.muted = muted);
+    this.level.enemies.forEach(e => {
+      if (e.hurt_sound) e.hurt_sound.muted = muted;
+      if (e.dead_sound) e.dead_sound.muted = muted;
+    });
+    this.throwableObjects.forEach(b => { b.breakSound.muted = muted; });
+  }
+
+  /** Registers all recurring collision and game-logic intervals. */
+  startIntervals() {
     this.checkCollisions();
     this.checkBottleCollect();
     this.checkBottleBoxCollect();
@@ -52,16 +128,19 @@ class World {
     this.checkGameOver();
   }
 
-  setWorld() {
-    this.character.world = this;
-    if (this.endboss) this.endboss.world = this;
-  }
-
+  /** Main render loop – clears the canvas, draws all game objects and the HUD, then reschedules itself. */
   draw() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
     this.ctx.translate(this.camera_x, 0);
+    this.drawWorldObjects();
+    this.ctx.translate(-this.camera_x, 0);
+    this.drawHUD();
+    this.checkEndbossActivation();
+    this._rafId = requestAnimationFrame(() => this.draw());
+  }
 
+  /** Draws all scrolling game-world objects (background, characters, items). */
+  drawWorldObjects() {
     this.addObjectsToMap(this.backgroundObjects);
     this.addObjectsToMap(this.clouds);
     this.addObjectsToMap(this.level.bottles);
@@ -70,33 +149,46 @@ class World {
     this.addObjectsToMap(this.enemies);
     this.addObjectsToMap(this.throwableObjects);
     this.addToMap(this.character);
+  }
 
-    this.ctx.translate(-this.camera_x, 0);
+  /** Draws the fixed HUD status bars on top of the world. */
+  drawHUD() {
     this.addToMap(this.statusbarHealth);
     this.addToMap(this.statusbarCoin);
     this.addToMap(this.statusbarBottle);
-    if (!this.endSoundPlayed && this.character.x > this.level_end_x - 800) {
-      this.bg_audio.pause();
-      this.endSound.play();
-      this.endSound.playbackRate = 1.0;
-      this.endSound.onended = () => {
-        this.bg_audio.playbackRate = 1.4;
-        this.bg_audio.play();
-      };
-      this.endSoundPlayed = true;
-      if (this.endboss) this.endboss.activated = true;
-    }
-    this._rafId = requestAnimationFrame(() => {
-      this.draw();
-    });
   }
 
+  /**
+   * Triggers the endboss encounter audio and activates the endboss
+   * when the character is close enough to the end of the level.
+   */
+  checkEndbossActivation() {
+    if (this.endSoundPlayed || this.character.x <= this.level_end_x - 800) return;
+    this.bg_audio.pause();
+    this.endSound.play();
+    this.endSound.playbackRate = 1.0;
+    this.endSound.onended = () => {
+      this.bg_audio.playbackRate = 1.4;
+      this.bg_audio.play();
+    };
+    this.endSoundPlayed = true;
+    if (this.endboss) this.endboss.activated = true;
+  }
+
+  /**
+   * Draws every object in the given array onto the canvas.
+   * @param {DrawableObject[]} objects - Array of game objects to render.
+   */
   addObjectsToMap(objects) {
     objects.forEach((object) => {
       this.addToMap(object);
     });
   }
 
+  /**
+   * Draws a single object, flipping the canvas horizontally when the object faces left.
+   * @param {DrawableObject} mo - The object to draw.
+   */
   addToMap(mo) {
     if (mo.otherDirection) {
       this.flipImage(mo);
@@ -110,6 +202,10 @@ class World {
     }
   }
 
+  /**
+   * Flips the canvas context horizontally so a left-facing sprite renders correctly.
+   * @param {DrawableObject} mo - The object about to be drawn mirrored.
+   */
   flipImage(mo) {
     this.ctx.save();
     this.ctx.translate(mo.width, 0);
@@ -117,11 +213,16 @@ class World {
     mo.x = mo.x * -1;
   }
 
+  /**
+   * Restores the canvas context after a horizontal flip.
+   * @param {DrawableObject} mo - The object that was drawn mirrored.
+   */
   flipImageBack(mo) {
     mo.x = mo.x * -1;
     this.ctx.restore();
   }
 
+  /** Periodically tests character-vs-enemy collisions and dispatches the appropriate handler. */
   checkCollisions() {
     setStoppableInterval(() => {
       this.level.enemies.forEach((enemy) => {
@@ -133,6 +234,10 @@ class World {
     }, 100);
   }
 
+  /**
+   * Decides whether the character lands on top of an enemy or takes damage.
+   * @param {movableObject} enemy - The enemy the character collided with.
+   */
   handleEnemyCollision(enemy) {
     if (this.character.isFallingOnTop(enemy)) {
       if (enemy instanceof Endboss) {
@@ -145,6 +250,10 @@ class World {
     }
   }
 
+  /**
+   * Kills an enemy by stomping and bounces the character upward.
+   * @param {movableObject} enemy - The enemy being stomped.
+   */
   handleDamageToEnemy(enemy) {
     enemy.health = 0;
     this.character.speedY = 15;
@@ -154,6 +263,7 @@ class World {
     }, 500);
   }
 
+  /** Deals one hit of enemy damage to the character if the hurt cooldown has expired. */
   handleDamageToCharacter() {
     if (!this.character.isHurt()) {
       this.character.handleDamage(this.enemyDamage);
@@ -161,6 +271,7 @@ class World {
     }
   }
 
+  /** Periodically checks whether the character walks over a ground bottle and collects it. */
   checkBottleCollect() {
     setStoppableInterval(() => {
       this.level.bottles = this.level.bottles.filter(bottle => {
@@ -174,6 +285,7 @@ class World {
     }, 100);
   }
 
+  /** Periodically checks whether the character walks over a bottle box and collects it. */
   checkBottleBoxCollect() {
     setStoppableInterval(() => {
       this.level.bottleBoxes = this.level.bottleBoxes.filter(box => {
@@ -187,38 +299,54 @@ class World {
     }, 100);
   }
 
+  /** Periodically checks every thrown bottle against every living enemy for collisions. */
   checkBottleHitEnemy() {
     setStoppableInterval(() => {
       this.throwableObjects.forEach(bottle => {
         if (bottle.markedForDeletion) return;
-        this.level.enemies.forEach(enemy => {
-          if (enemy.isDead()) return;
-          if (bottle.isColliding(enemy)) {
-            if (enemy instanceof Endboss) {
-              if (!enemy.isCurrentlyHurt()) {
-                enemy.takeHit();
-                bottle.splash();
-              }
-              if (enemy.isDead()) {
-                setTimeout(() => {
-                  const i = this.level.enemies.indexOf(enemy);
-                  if (i !== -1) this.level.enemies.splice(i, 1);
-                }, 800);
-              }
-            } else {
-              enemy.health = 0;
-              bottle.splash();
-              setTimeout(() => {
-                const i = this.level.enemies.indexOf(enemy);
-                if (i !== -1) this.level.enemies.splice(i, 1);
-              }, 500);
-            }
-          }
-        });
+        this.level.enemies.forEach(enemy => this.handleBottleEnemyCollision(bottle, enemy));
       });
     }, 100);
   }
 
+  /**
+   * Applies the correct hit logic when a bottle collides with an enemy.
+   * @param {ThrowableObject} bottle - The thrown bottle.
+   * @param {movableObject}   enemy  - The enemy being hit.
+   */
+  handleBottleEnemyCollision(bottle, enemy) {
+    if (enemy.isDead() || !bottle.isColliding(enemy)) return;
+    if (enemy instanceof Endboss) {
+      this.handleBottleHitEndboss(bottle, enemy);
+    } else {
+      enemy.health = 0;
+      bottle.splash();
+      setTimeout(() => {
+        const i = this.level.enemies.indexOf(enemy);
+        if (i !== -1) this.level.enemies.splice(i, 1);
+      }, 500);
+    }
+  }
+
+  /**
+   * Handles a bottle hitting the endboss: deals damage and removes the boss on death.
+   * @param {ThrowableObject} bottle - The thrown bottle.
+   * @param {Endboss}         enemy  - The endboss instance.
+   */
+  handleBottleHitEndboss(bottle, enemy) {
+    if (!enemy.isCurrentlyHurt()) {
+      enemy.takeHit();
+      bottle.splash();
+    }
+    if (enemy.isDead()) {
+      setTimeout(() => {
+        const i = this.level.enemies.indexOf(enemy);
+        if (i !== -1) this.level.enemies.splice(i, 1);
+      }, 800);
+    }
+  }
+  /** Periodically checks if the game-over condition is met (character dead or endboss dead). */
+  /** Periodically checks if the game-over condition is met (character dead or endboss dead). */
   checkGameOver() {
     setStoppableInterval(() => {
       if (this.gameEnded) return;
@@ -232,6 +360,10 @@ class World {
     }, 200);
   }
 
+  /**
+   * Displays the win or lose overlay image and plays the matching end sound.
+   * @param {'win'|'lose'} result - Outcome of the game.
+   */
   showEndScreen(result) {
     const overlay = document.getElementById('endScreenOverlay');
     const img = document.getElementById('endScreenImg');
@@ -244,6 +376,7 @@ class World {
     else this.loseSound.play();
   }
 
+  /** Periodically checks whether the character collects a coin and updates the coin bar. */
   checkCoinCollect() {
     setStoppableInterval(() => {
       this.level.coins = this.level.coins.filter(coin => {
@@ -259,6 +392,7 @@ class World {
     }, 100);
   }
 
+  /** Periodically handles bottle throwing input and cleans up deleted bottle objects. */
   checkThrow() {
     setStoppableInterval(() => {
       if ((this.keyboard.D || this.keyboard.SPACE) && this.canThrow && this.collectedBottles > 0) {

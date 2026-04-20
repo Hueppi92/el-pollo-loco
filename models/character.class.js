@@ -6,6 +6,12 @@ class Character extends movableObject {
   width = 110;
   height = 280;
 
+  /** Tighter collision box – the Pepe sprite has large transparent borders. */
+  offsetTop    = 100;
+  offsetBottom =  10;
+  offsetLeft   =  20;
+  offsetRight  =  20;
+
   IMAGES_IDLE = [
     "img/2_character_pepe/1_idle/idle/I-1.png",
     "img/2_character_pepe/1_idle/idle/I-2.png",
@@ -73,13 +79,17 @@ SOUNDS_PEPE = [
 
 walking_sound = new Audio(this.SOUNDS_PEPE[0]);
 jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
-hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
+hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
 
+  /** @type {World} Reference to the game world, set after the world is constructed. */
   world;
   currentImage = 0;
-  lastMoveTime = Date.now(); // Timestamp of last movement
-  isIdleLong = false; // True if idle for more than 10s
+  /** Timestamp of the last movement input, used to detect long idle periods. */
+  lastMoveTime = Date.now();
+  /** True once the character has been idle for more than 5 seconds. */
+  isIdleLong = false;
 
+  /** Preloads all animation frames and starts the movement and animation loops. */
   constructor() {
     super().loadImage("img/2_character_pepe/2_walk/W-21.png");
     this.loadImages(this.IMAGES_IDLE);
@@ -91,12 +101,15 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
     this.applyGravity();
     this.animate();
   }
+
+  /** Starts the physics movement loop (60 fps) and the animation loop (12.5 fps). */
   animate() {
     this.speed = 5;
     setStoppableInterval(() => this.moveCharacter(), 1000 / 60);
     setStoppableInterval(() => this.playCharacter(), 80);
   }
 
+  /** Reads keyboard input, moves the character, and updates the camera position. */
   moveCharacter() {
     if (!this.world || this.isDead()) return;
     this.walking_sound.playbackRate = 2.5;
@@ -110,51 +123,71 @@ hurt_sound = new Audio(this.SOUNDS_PEPE[2]);
     this.world.camera_x = Math.max(minCameraX, Math.min(0, -this.x + 100));
   }
 
+  /**
+   * Returns true when the character is allowed to move right.
+   * @returns {boolean}
+   */
   canMoveRight() {
     return this.world.keyboard.RIGHT && this.x < this.world.level_end_x - this.width;
   }
 
+  /** Moves the character right and plays the walking sound when on the ground. */
   moveRight() {
     super.moveRight();
     this.otherDirection = false;
     if (!this.isAboveGround()) this.walking_sound.play();
   }
 
+  /**
+   * Returns true when the character is allowed to move left.
+   * @returns {boolean}
+   */
   canMoveLeft() {
     return this.world.keyboard.LEFT && this.x > 0;
   }
 
+  /** Moves the character left and plays the walking sound when on the ground. */
   moveLeft() {
     super.moveLeft();
     this.otherDirection = true;
     if (!this.isAboveGround()) this.walking_sound.play();
   }
 
+  /**
+   * Returns true when the character can initiate a jump.
+   * @returns {boolean}
+   */
   canJump() {
     return this.world.keyboard.UP && this.jumpAllowed && !this.isAboveGround();
   }
 
+  /** Plays the hurt animation and sound and updates the health status bar. */
   handleHurt() {
-    if(this.health <=0 ) {
-      this.isDead();
-    }
     this.playAnimation(this.IMAGES_HURT);
+    this.hurt_sound.volume = 1;
     this.hurt_sound.currentTime = 0;
-    this.hurt_sound.play();
+    this.hurt_sound.play().catch(() => {});
     this.hurtTimestamp = Date.now();
     this.world.statusbarHealth.setPercentage(this.health);
   }
 
-
+  /**
+   * Returns true if the character was hurt within the last 500 ms.
+   * @returns {boolean}
+   */
   isHurt() {
     return Date.now() - this.hurtTimestamp < 500;
   }
 
-isDead() {
-   
-      return this.health <= 0;
-    } 
+  /**
+   * Returns true if the character's health has reached zero.
+   * @returns {boolean}
+   */
+  isDead() {
+    return this.health <= 0;
+  }
 
+  /** Tracks whether the character has been idle long enough to trigger the sleeping animation. */
   updateIdleState() {
     const isMoving = this.world.keyboard.RIGHT || this.world.keyboard.LEFT || this.isAboveGround();
     if (isMoving) {
@@ -165,6 +198,7 @@ isDead() {
     }
   }
 
+  /** Selects and plays the correct animation frame based on the character's current state. */
   playCharacter() {
     if (!this.world) return;
     if (this.isDead()) { this.playAnimation(this.IMAGES_DEAD); return; }
@@ -178,6 +212,8 @@ isDead() {
       this.playAnimation(this.IMAGES_IDLE);
     }
   }
+
+  /** Launches the character upward, plays the jump sound, and locks further jumps until landing. */
   jump() {
     if (this.jumping_sound) {
       this.jumping_sound.currentTime = 0;

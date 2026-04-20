@@ -1,4 +1,11 @@
-const level1 = new Level(
+/**
+ * Creates and returns a fresh Level 1 instance with all enemies, backgrounds,
+ * collectibles and coins in their initial state.
+ * Call this before constructing a new World so every restart gets clean data.
+ * @returns {Level}
+ */
+function createLevel1() {
+  return new Level(
     [
         new Chicken(),  
         new Chicken(),
@@ -47,4 +54,8 @@ const level1 = new Level(
         new Coin(1150, 280),
         new Coin(1300, 200),
     ]
-);  
+  );
+}
+
+/** @type {Level} The active level instance, (re-)created on every game start. */
+let level1;

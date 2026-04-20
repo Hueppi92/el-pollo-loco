@@ -10,8 +10,6 @@
     <script src="models/drawable-object.class.js"></script>
     <script src="models/movable-object.class.js"></script>
     <script src="models/statusbar-object.class.js"></script>
-    <script src="models/statusbar-coin.class.js"></script>
-    <script src="models/statusbar-bottle.class.js"></script>
     <script src="models/coin.class.js"></script>
     <script src="models/bottle.class.js"></script>
     <script src="models/bottle-box.class.js"></script>
@@ -29,10 +27,16 @@
     <title>El Pollo Loco</title>
 </head>
 <body>
+    <!-- Shown on mobile portrait mode only -->
+    <div id="rotateOverlay">
+        <div id="rotateIcon">&#x1F4F1;</div>
+        <p>Please rotate your device to landscape mode</p>
+    </div>
     <h1>El pollo loco</h1>
     <div id="gameContainer">
             <canvas id="canvas" width="720" height="480"></canvas>
             <div id="gameButtons">
+                <button id="menuBtn" onclick="goToMenu()" title="Back to Menu" style="display:none"><img src="img/home.png" alt="Menu" style="width:22px;height:22px;object-fit:contain;"></button>
                 <button id="muteBtn" onclick="toggleMute()" title="Mute">🔊</button>
                 <button id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
             </div>
@@ -41,13 +45,13 @@
                     <div id="keybindings">
                         <div class="key-row"><span class="key">← →</span><span>Move</span></div>
                         <div class="key-row"><span class="key">↑</span><span>Jump</span></div>
-                        <div class="key-row"><span class="key">Space / D</span><span>Throw bottle</span></div>
+                        <div class="key-row"><span class="key">Space</span><span>Throw bottle</span></div>
                     </div>
                     <button id="startGameBtn" onclick="startGame()">Start Game</button>
             </div>
             <div id="endScreenOverlay">
                     <img id="endScreenImg" src="" alt="End Screen">
-                    <button id="restartBtn" onclick="location.reload()">Play Again</button>
+                    <button id="restartBtn" onclick="restartGame()">Play Again</button>
             </div>
             <div id="mobileControls">
                 <div id="mobileLeft">
@@ -60,5 +64,8 @@
                 </div>
             </div>
         </div>
+    <footer>
+        <a href="impressum.html">Impressum / Legal Notice</a>
+    </footer>
 </body>
 </html>
