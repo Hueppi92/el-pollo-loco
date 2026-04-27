@@ -1,0 +1,79 @@
+.impressum-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 32px;
+    background-image: url('img/legal_bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    font-family: sans-serif;
+    color: #2f1a10;
+    position: relative;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+
+.impressum-container > * {
+    position: relative;
+    z-index: 1;
+}
+
+
+
+.impressum-container h1,
+.impressum-container h2 {
+    font-family: 'Rye', serif;
+    color: #b35424;
+    margin-top: 0;
+}
+
+.impressum-container a {
+    color: #8a3d16;
+    font-weight: 700;
+}
+
+.impressum-container a:hover {
+    color: #b3541e;
+}
+
+.impressum-container p {
+    margin-bottom: 16px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 26px;
+    background: #f1c14a;
+    color: #5f250b;
+    border: 2px solid #6b2f12;
+    border-radius: 10px;
+    text-decoration: none;
+    font-family: 'Rye', serif;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+    transition: transform 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.back-link:hover {
+    background: #e0ae36;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+    transform: translateY(-1px);
+}
+
+.back-link-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+    margin-bottom: 28px;
+}
+
+@media (max-width: 640px) {
+    .impressum-container {
+        margin: 20px 12px;
+        padding: 24px;
+    }
+}

@@ -42,8 +42,17 @@ class Endboss extends movableObject {
 
   activated = false;
   hurtTimestamp = 0;
-  health = 3;
-  speed = 1.5;
+  lungeTimestamp = 0;
+  health = 6;
+  speed = 2.5;
+  hurtDuration = 500;
+  hitBlockDuration = 1300;
+  offsetTop = 40;
+  offsetBottom = 20;
+  offsetLeft = 30;
+  offsetRight = 30;
+  lungeSpeed = 14;
+  lungeDuration = 500;
   attackRange = 250;
   hurt_sound = new Audio('audio/enemy/boss_chicken_hurt.mp3');
 
@@ -77,7 +86,28 @@ class Endboss extends movableObject {
    * @returns {boolean}
    */
   isCurrentlyHurt() {
-    return Date.now() - this.hurtTimestamp < 600;
+    return Date.now() - this.hurtTimestamp < this.hurtDuration;
+  }
+
+  /**
+   * Returns true while the boss is temporarily invulnerable after a hit.
+   * @returns {boolean}
+   */
+  isHitBlocked() {
+    return Date.now() - this.hurtTimestamp < this.hitBlockDuration;
+  }
+
+  /**
+   * Returns true while the boss is mid-lunge (within {@link lungeDuration} ms of the last lunge).
+   * @returns {boolean}
+   */
+  isLunging() {
+    return Date.now() - this.lungeTimestamp < this.lungeDuration;
+  }
+
+  /** Starts a lunge charge toward the character. */
+  lunge() {
+    this.lungeTimestamp = Date.now();
   }
 
   /**
@@ -90,19 +120,24 @@ class Endboss extends movableObject {
   }
 
   animate() {
-    // Movement — walk toward character once activated
+    // Movement — walk toward character once activated; lunge through them when in attack range
     setStoppableInterval(() => {
       if (!this.activated || this.isDead() || this.isCurrentlyHurt()) return;
-      if (this.world && !this.isNearCharacter(this.world.character)) {
-        if (this.world.character.x < this.x) {
-          this.x -= this.speed;
-          this.otherDirection = false;
-        } else {
-          this.x += this.speed;
-          this.otherDirection = true;
-        }
+      if (!this.world) return;
+      const charX = this.world.character.x;
+      const currentSpeed = this.isLunging() ? this.lungeSpeed : this.speed;
+      const shouldMove = this.isLunging() || !this.isNearCharacter(this.world.character);
+      if (shouldMove) {
+        if (charX < this.x) { this.x -= currentSpeed; this.otherDirection = false; }
+        else                 { this.x += currentSpeed; this.otherDirection = true;  }
       }
     }, 1000 / 60);
+
+    // Lunge trigger — charge every ~2 s when the character is within attack range
+    setStoppableInterval(() => {
+      if (!this.activated || this.isDead() || this.isCurrentlyHurt() || this.isLunging()) return;
+      if (this.world && this.isNearCharacter(this.world.character)) this.lunge();
+    }, 2000);
 
     // Animation state
     setStoppableInterval(() => {

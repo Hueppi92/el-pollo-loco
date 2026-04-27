@@ -8,9 +8,9 @@ class Character extends movableObject {
 
   /** Tighter collision box – the Pepe sprite has large transparent borders. */
   offsetTop    = 100;
-  offsetBottom =  10;
-  offsetLeft   =  20;
-  offsetRight  =  20;
+  offsetBottom =  14;
+  offsetLeft   =  24;
+  offsetRight  =  24;
 
   IMAGES_IDLE = [
     "img/2_character_pepe/1_idle/idle/I-1.png",
@@ -113,7 +113,8 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
   moveCharacter() {
     if (!this.world || this.isDead()) return;
     this.walking_sound.playbackRate = 2.5;
-    this.walking_sound.pause();
+    const isWalkingOnGround = !this.isAboveGround() && (this.canMoveRight() || this.canMoveLeft());
+    this.updateWalkingSound(isWalkingOnGround);
     if (this.canMoveRight()) this.moveRight();
     if (this.canMoveLeft()) this.moveLeft();
     if (this.canJump()) this.jump();
@@ -135,7 +136,6 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
   moveRight() {
     super.moveRight();
     this.otherDirection = false;
-    if (!this.isAboveGround()) this.walking_sound.play();
   }
 
   /**
@@ -150,7 +150,20 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
   moveLeft() {
     super.moveLeft();
     this.otherDirection = true;
-    if (!this.isAboveGround()) this.walking_sound.play();
+  }
+
+  /** Starts/stops walking audio based on movement state without generating play/pause race errors. */
+  updateWalkingSound(shouldPlay) {
+    if (shouldPlay) {
+      if (this.walking_sound.paused) {
+        this.walking_sound.play().catch(() => {});
+      }
+      return;
+    }
+    if (!this.walking_sound.paused) {
+      this.walking_sound.pause();
+      this.walking_sound.currentTime = 0;
+    }
   }
 
   /**
@@ -217,7 +230,7 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
   jump() {
     if (this.jumping_sound) {
       this.jumping_sound.currentTime = 0;
-      this.jumping_sound.play();
+      this.jumping_sound.play().catch(() => {});
     }
     this.speedY = 15;
     this.acceleration = 0.8;

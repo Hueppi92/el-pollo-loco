@@ -47,10 +47,10 @@ class movableObject extends DrawableObject {
    */
   isColliding(mo) {
     return (
-      this.x + this.width  - this.offsetRight  > mo.x + mo.offsetLeft &&
       this.x + this.offsetLeft                 < mo.x + mo.width - mo.offsetRight &&
-      this.y + this.height - this.offsetBottom > mo.y + mo.offsetTop &&
-      this.y + this.offsetTop                  < mo.y + mo.height - mo.offsetBottom
+      this.x + this.width - this.offsetRight   > mo.x + mo.offsetLeft &&
+      this.y + this.offsetTop                  < mo.y + mo.height - mo.offsetBottom &&
+      this.y + this.height - this.offsetBottom > mo.y + mo.offsetTop
     );
   }
 
@@ -60,7 +60,9 @@ class movableObject extends DrawableObject {
    * @returns {boolean}
    */
   isFallingOnTop(mo) {
-    return this.speedY < 0 && this.y + this.height < mo.y + mo.height;
+    const thisBottom = this.y + this.height - this.offsetBottom;
+    const otherTop = mo.y + mo.offsetTop;
+    return this.speedY < 0 && thisBottom <= otherTop + 20;
   }
 
   /**

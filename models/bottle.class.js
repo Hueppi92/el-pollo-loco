@@ -1,6 +1,10 @@
 class Bottle extends movableObject {
   width = 60;
   height = 70;
+  offsetTop = 14;
+  offsetBottom = 18;
+  offsetLeft = 30;
+  offsetRight = 18;
 
   constructor(x) {
     super();

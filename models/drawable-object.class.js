@@ -49,14 +49,19 @@ class DrawableObject {
   }
 
   /**
-   * Draws a blue debug rectangle around the sprite's full bounding box.
+   * Draws a blue debug rectangle around the object's collision box.
    * @param {CanvasRenderingContext2D} ctx - The canvas context to draw on.
    */
   drawFrame(ctx) {
     ctx.beginPath();
     ctx.lineWidth = "5";
     ctx.strokeStyle = "blue";
-    ctx.rect(this.x, this.y, this.width, this.height);
+    ctx.rect(
+      this.x + this.offsetLeft,
+      this.y + this.offsetTop,
+      this.width - this.offsetLeft - this.offsetRight,
+      this.height - this.offsetTop - this.offsetBottom
+    );
     ctx.stroke();
   }
 

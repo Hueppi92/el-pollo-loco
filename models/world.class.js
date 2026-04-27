@@ -40,11 +40,13 @@ class World {
   /** @type {Statusbar} */ statusbarBottle;
 
   throwableObjects = [];
+  pendingBottleRespawns = [];
   collectedBottles = 0;
   maxBottles = 5;
   collectedCoins = 0;
   maxCoins = 8;
   canThrow = true;
+  bottleRespawnDelay = 8000;
 
   enemyDamage = 5;
   characterDamage = 5;
@@ -96,7 +98,7 @@ class World {
   initAudio() {
     this.bg_audio.loop = true;
     this.bg_audio.volume = 0.3;
-    this.bg_audio.play();
+    this.bg_audio.play().catch(() => {});
   }
 
   /**
@@ -121,6 +123,7 @@ class World {
   startIntervals() {
     this.checkCollisions();
     this.checkBottleCollect();
+    this.checkBottleRespawn();
     this.checkBottleBoxCollect();
     this.checkBottleHitEnemy();
     this.checkThrow();
@@ -165,11 +168,11 @@ class World {
   checkEndbossActivation() {
     if (this.endSoundPlayed || this.character.x <= this.level_end_x - 800) return;
     this.bg_audio.pause();
-    this.endSound.play();
+    this.endSound.play().catch(() => {});
     this.endSound.playbackRate = 1.0;
     this.endSound.onended = () => {
       this.bg_audio.playbackRate = 1.4;
-      this.bg_audio.play();
+      this.bg_audio.play().catch(() => {});
     };
     this.endSoundPlayed = true;
     if (this.endboss) this.endboss.activated = true;
@@ -194,9 +197,6 @@ class World {
       this.flipImage(mo);
     }
     mo.draw(this.ctx);
-   /*  if (mo instanceof Character || mo instanceof Chicken) {
-      mo.drawFrame(this.ctx); // For debugging hitboxes
-    } */
     if (mo.otherDirection) {
       this.flipImageBack(mo);
     }
@@ -231,7 +231,7 @@ class World {
           this.handleEnemyCollision(enemy);
         }
       });
-    }, 100);
+    }, 1000 / 60);
   }
 
   /**
@@ -278,11 +278,32 @@ class World {
         if (this.character.isColliding(bottle) && this.collectedBottles < this.maxBottles) {
           this.collectedBottles++;
           this.statusbarBottle.setPercentage(this.collectedBottles * 20);
+          this.queueBottleRespawn(bottle);
           return false;
         }
         return true;
       });
     }, 100);
+  }
+
+  /** Stores a collected bottle so it can respawn at the same position later. */
+  queueBottleRespawn(bottle) {
+    this.pendingBottleRespawns.push({
+      x: bottle.x,
+      respawnAt: Date.now() + this.bottleRespawnDelay,
+    });
+  }
+
+  /** Periodically restores collected ground bottles after the respawn delay expires. */
+  checkBottleRespawn() {
+    setStoppableInterval(() => {
+      const now = Date.now();
+      this.pendingBottleRespawns = this.pendingBottleRespawns.filter((respawn) => {
+        if (respawn.respawnAt > now) return true;
+        this.level.bottles.push(new Bottle(respawn.x));
+        return false;
+      });
+    }, 200);
   }
 
   /** Periodically checks whether the character walks over a bottle box and collects it. */
@@ -334,7 +355,7 @@ class World {
    * @param {Endboss}         enemy  - The endboss instance.
    */
   handleBottleHitEndboss(bottle, enemy) {
-    if (!enemy.isCurrentlyHurt()) {
+    if (!enemy.isHitBlocked()) {
       enemy.takeHit();
       bottle.splash();
     }
@@ -372,8 +393,8 @@ class World {
       : 'img/You won, you lost/You lost.png';
     overlay.style.display = 'flex';
     stopGame();
-    if (result === 'win') this.winSound.play();
-    else this.loseSound.play();
+    if (result === 'win') this.winSound.play().catch(() => {});
+    else this.loseSound.play().catch(() => {});
   }
 
   /** Periodically checks whether the character collects a coin and updates the coin bar. */
@@ -384,7 +405,7 @@ class World {
           this.collectedCoins++;
           this.statusbarCoin.setPercentage(Math.min(this.collectedCoins / this.maxCoins * 100, 100));
           this.coinSound.currentTime = 0;
-          this.coinSound.play();
+          this.coinSound.play().catch(() => {});
           return false;
         }
         return true;
@@ -398,6 +419,7 @@ class World {
       if ((this.keyboard.D || this.keyboard.SPACE) && this.canThrow && this.collectedBottles > 0) {
         const direction = this.character.otherDirection ? -1 : 1;
         const bottle = new ThrowableObject(this.character.x + 50, this.character.y + 100, direction);
+        bottle.breakSound.muted = isMuted;
         this.throwableObjects.push(bottle);
         this.collectedBottles--;
         this.statusbarBottle.setPercentage(this.collectedBottles * 20);

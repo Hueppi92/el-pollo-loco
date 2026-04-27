@@ -1,23 +1,47 @@
+/**
+ * Returns {@code true} when the page is running on a real mobile device.
+ * Prefers the modern {@link NavigatorUAData.mobile} hint; falls back to
+ * checking for coarse-pointer (touch-primary) input with a phone-sized screen.
+ * @returns {boolean}
+ */
+function detectMobile() {
+    if (navigator.userAgentData?.mobile != null) return navigator.userAgentData.mobile;
+    const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    return coarsePointer && window.screen.width <= 1024;
+}
+
+/**
+ * Runs once the DOM is ready. Detects mobile devices to apply the
+ * {@code is-mobile} class (enables the rotate-hint and mobile layout),
+ * shows touch controls, and restores the mute button icon.
+ */
 document.addEventListener('DOMContentLoaded', () => {
     const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+    if (detectMobile()) {
+        document.body.classList.add('is-mobile');
+    }
     if (isTouch) {
         document.getElementById('mobileControls').style.display = 'flex';
     }
-    // Restore mute button icon from saved setting
     document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
 });
 
-/** @type {HTMLCanvasElement} */ let canvas;
-/** @type {World}             */ let world;
-/** @type {Keyboard}          */ let keyboard;
-/** @type {boolean} Whether the game has been started at least once. */ let gameStarted = false;
-/** @type {number[]} All active interval IDs, used to stop them cleanly. */ let intervalIds = [];
-/** @type {boolean} Global mute state – loaded from localStorage so it survives page reloads. */
+/** @type {HTMLCanvasElement} The main game canvas element. */
+let canvas;
+/** @type {World} The active world instance containing all game objects and logic. */
+let world;
+/** @type {Keyboard} Tracks which keys / touch buttons are currently pressed. */
+let keyboard;
+/** @type {boolean} Whether the game has been started at least once (hides the start screen). */
+let gameStarted = false;
+/** @type {number[]} IDs of all active intervals, cleared on {@link stopGame}. */
+let intervalIds = [];
+/** @type {boolean} Global mute state – persisted in localStorage so it survives page reloads. */
 let isMuted = localStorage.getItem('elPollo_muted') === 'true';
 
 /**
- * Registers a recurring interval that can be stopped via {@link stopGame}.
- * @param {Function} fn   - Callback to run repeatedly.
+ * Registers a recurring interval whose ID is tracked so it can be cleared by {@link stopGame}.
+ * @param {Function} fn   - Callback to execute on each tick.
  * @param {number}   time - Interval delay in milliseconds.
  */
 function setStoppableInterval(fn, time) {
@@ -25,7 +49,10 @@ function setStoppableInterval(fn, time) {
     intervalIds.push(id);
 }
 
-/** Stops all registered intervals and cancels the render-animation-frame loop. */
+/**
+ * Stops all registered intervals, cancels the render loop, and pauses every world
+ * audio object. Safe to call even when no game is running.
+ */
 function stopGame() {
     intervalIds.forEach(clearInterval);
     intervalIds = [];
@@ -40,7 +67,10 @@ function stopGame() {
     }
 }
 
-/** Creates a fresh level and world instance and starts the game loop. */
+/**
+ * Creates a fresh {@link Keyboard}, {@link Level}, and {@link World} instance,
+ * hides the start screen, and kicks off the game loop.
+ */
 function startGame() {
     keyboard = new Keyboard();
     document.getElementById('startScreenOverlay').style.display = 'none';
@@ -53,8 +83,8 @@ function startGame() {
 }
 
 /**
- * Stops the current game, resets the end screen, and immediately starts a new game.
- * Does NOT reload the page – all game objects are re-created cleanly.
+ * Stops the running game, hides the end screen, and immediately starts a fresh game.
+ * All game objects are re-created in place – no page reload required.
  */
 function restartGame() {
     stopGame();
@@ -62,7 +92,10 @@ function restartGame() {
     startGame();
 }
 
-/** Stops the game and returns to the start screen menu. */
+/**
+ * Stops the running game and navigates back to the start screen.
+ * Resets {@link gameStarted} and clears the world reference.
+ */
 function goToMenu() {
     stopGame();
     document.getElementById('endScreenOverlay').style.display = 'none';
@@ -72,12 +105,18 @@ function goToMenu() {
     world = null;
 }
 
-/** Applies the current {@link isMuted} state to every audio object in the world. */
+/**
+ * Propagates the current {@link isMuted} flag to every audio object managed by
+ * the active world. No-op when no world is running.
+ */
 function applyMuteState() {
     if (world) world.muteAllSounds(isMuted);
 }
 
-/** Toggles mute on/off, persists the choice to localStorage, and updates all active sounds. */
+/**
+ * Toggles the global mute state, persists it to localStorage, updates the button
+ * icon, and applies the new state to all currently active sounds.
+ */
 function toggleMute() {
     isMuted = !isMuted;
     localStorage.setItem('elPollo_muted', isMuted);
@@ -85,7 +124,10 @@ function toggleMute() {
     applyMuteState();
 }
 
-/** Toggles the game container between fullscreen and normal mode. */
+/**
+ * Requests fullscreen for the game container, or exits fullscreen if it is
+ * already active. Uses the standard Fullscreen API.
+ */
 function toggleFullscreen() {
     const container = document.getElementById('gameContainer');
     if (!document.fullscreenElement) {
