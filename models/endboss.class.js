@@ -56,6 +56,7 @@ class Endboss extends movableObject {
   attackRange = 500;
   hurt_sound = new Audio('audio/enemy/boss_chicken_hurt.mp3');
 
+  /** Preloads all animation frames and sets the boss's initial position. */
   constructor() {
     super().loadImage("img/4_enemie_boss_chicken/2_alert/G5.png");
     this.loadImages(this.IMAGES_WALKING);
@@ -121,37 +122,41 @@ class Endboss extends movableObject {
 
   /** Starts all three recurring loops: movement/physics, lunge trigger, and sprite animation. */
   animate() {
-    // Movement — walk toward character once activated; lunge through them when in attack range
+    this.startMovementLoop();
+    this.startLungeLoop();
+    this.startAnimationLoop();
+  }
+
+  /** Walks toward the character each frame; uses lunge speed during a charge. */
+  startMovementLoop() {
     setStoppableInterval(() => {
-      if (!this.activated || this.isDead() || this.isCurrentlyHurt()) return;
-      if (!this.world) return;
+      if (!this.activated || this.isDead() || this.isCurrentlyHurt() || !this.world) return;
       const charX = this.world.character.x;
       const currentSpeed = this.isLunging() ? this.lungeSpeed : this.speed;
       const shouldMove = this.isLunging() || !this.isNearCharacter(this.world.character);
       if (shouldMove) {
         if (charX < this.x) { this.x -= currentSpeed; this.otherDirection = false; }
-        else                 { this.x += currentSpeed; this.otherDirection = true;  }
+        else                { this.x += currentSpeed; this.otherDirection = true; }
       }
     }, 1000 / 60);
+  }
 
-    // Lunge trigger — charge every ~1 s when the character is within attack range
+  /** Triggers a lunge charge every second when the character is within attack range. */
+  startLungeLoop() {
     setStoppableInterval(() => {
       if (!this.activated || this.isDead() || this.isCurrentlyHurt() || this.isLunging()) return;
       if (this.world && this.isNearCharacter(this.world.character)) this.lunge();
     }, 1000);
+  }
 
-    // Animation state
+  /** Updates the boss sprite to match the current state each animation tick. */
+  startAnimationLoop() {
     setStoppableInterval(() => {
       if (!this.activated) return;
-      if (this.isDead()) {
-        this.playAnimation(this.IMAGES_DEAD);
-      } else if (this.isCurrentlyHurt()) {
-        this.playAnimation(this.IMAGES_HURT);
-      } else if (this.world && this.isNearCharacter(this.world.character)) {
-        this.playAnimation(this.IMAGES_ATTACK);
-      } else {
-        this.playAnimation(this.IMAGES_WALKING);
-      }
+      if (this.isDead()) { this.playAnimation(this.IMAGES_DEAD); }
+      else if (this.isCurrentlyHurt()) { this.playAnimation(this.IMAGES_HURT); }
+      else if (this.world && this.isNearCharacter(this.world.character)) { this.playAnimation(this.IMAGES_ATTACK); }
+      else { this.playAnimation(this.IMAGES_WALKING); }
     }, 150);
   }
 }

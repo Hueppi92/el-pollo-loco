@@ -2,13 +2,13 @@
  * Holds all entities and objects that make up a single game level.
  */
 class Level {
-    /** @type {movableObject[]} */ enemies;
-    /** @type {Cloud[]}         */ clouds;
-    /** @type {BackgroundObject[]} */ backgroundObjects;
-    /** @type {Character}       */ character;
-    /** @type {Bottle[]}        */ bottles;
-    /** @type {BottleBox[]}     */ bottleBoxes;
-    /** @type {Coin[]}          */ coins;
+    enemies;
+    clouds;
+    backgroundObjects;
+    character;
+    bottles;
+    bottleBoxes;
+    coins;
 
   /**
    * @param {movableObject[]}    enemies

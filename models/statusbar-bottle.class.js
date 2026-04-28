@@ -11,6 +11,7 @@ class StatusbarBottle extends DrawableObject {
 
   percentage = 0;
 
+  /** Initialises the bottle status bar at 0 % and positions it on the HUD. */
   constructor() {
     super();
     this.loadImages(this.IMAGES);
@@ -21,16 +22,29 @@ class StatusbarBottle extends DrawableObject {
     this.height = 50;
   }
 
+  /**
+   * Updates the bar's stored percentage and refreshes the displayed image.
+   * @param {number} percentage - New value between 0 and 100.
+   */
   setPercentage(percentage) {
     this.percentage = percentage;
     this.chooseImage(percentage);
   }
 
+  /**
+   * Selects and applies the image matching the given percentage.
+   * @param {number} percentage - Value between 0 and 100.
+   */
   chooseImage(percentage) {
     let index = this.resolveImageIndex(percentage);
     this.img = this.imageCache[this.IMAGES[index]];
   }
 
+  /**
+   * Maps a percentage value to the corresponding image-array index (0–5).
+   * @param {number} percentage - Value between 0 and 100.
+   * @returns {number}
+   */
   resolveImageIndex(percentage) {
     if (percentage >= 100) return 5;
     else if (percentage >= 80) return 4;

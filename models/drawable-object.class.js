@@ -7,16 +7,11 @@ class DrawableObject {
   imageCache = {};
   currentImage = 0;
 
-  /** Tracks the last animation array to detect animation switches and reset the frame index. */
   lastAnimationImages = null;
 
-  /** Pixels trimmed from the top of the sprite when calculating the collision box. */
   offsetTop = 0;
-  /** Pixels trimmed from the bottom of the sprite when calculating the collision box. */
   offsetBottom = 0;
-  /** Pixels trimmed from the left of the sprite when calculating the collision box. */
   offsetLeft = 0;
-  /** Pixels trimmed from the right of the sprite when calculating the collision box. */
   offsetRight = 0;
 
   /**

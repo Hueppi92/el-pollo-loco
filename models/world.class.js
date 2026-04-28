@@ -1,5 +1,4 @@
 class World {
-  /** @type {string[]} Image paths for the health status bar (0–100 %). */
   static HEALTH_IMAGES = [
     'img/7_statusbars/1_statusbar/2_statusbar_health/green/0.png',
     'img/7_statusbars/1_statusbar/2_statusbar_health/green/20.png',
@@ -9,7 +8,6 @@ class World {
     'img/7_statusbars/1_statusbar/2_statusbar_health/green/100.png',
   ];
 
-  /** @type {string[]} Image paths for the coin status bar (0–100 %). */
   static COIN_IMAGES = [
     'img/7_statusbars/1_statusbar/1_statusbar_coin/green/0.png',
     'img/7_statusbars/1_statusbar/1_statusbar_coin/green/20.png',
@@ -19,7 +17,6 @@ class World {
     'img/7_statusbars/1_statusbar/1_statusbar_coin/green/100.png',
   ];
 
-  /** @type {string[]} Image paths for the bottle status bar (0–100 %). */
   static BOTTLE_IMAGES = [
     'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/0.png',
     'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/20.png',
@@ -35,9 +32,9 @@ class World {
   level= level1
   backgroundObjects = level1.backgroundObjects;
 
-  /** @type {Statusbar} */ statusbarHealth;
-  /** @type {Statusbar} */ statusbarCoin;
-  /** @type {Statusbar} */ statusbarBottle;
+  statusbarHealth;
+  statusbarCoin;
+  statusbarBottle;
 
   throwableObjects = [];
   pendingBottleRespawns = [];
@@ -367,7 +364,6 @@ class World {
     }
   }
   /** Periodically checks if the game-over condition is met (character dead or endboss dead). */
-  /** Periodically checks if the game-over condition is met (character dead or endboss dead). */
   checkGameOver() {
     setStoppableInterval(() => {
       if (this.gameEnded) return;
@@ -417,16 +413,21 @@ class World {
   checkThrow() {
     setStoppableInterval(() => {
       if ((this.keyboard.D || this.keyboard.SPACE) && this.canThrow && this.collectedBottles > 0) {
-        const direction = this.character.otherDirection ? -1 : 1;
-        const bottle = new ThrowableObject(this.character.x + 50, this.character.y + 100, direction);
-        bottle.breakSound.muted = isMuted;
-        this.throwableObjects.push(bottle);
-        this.collectedBottles--;
-        this.statusbarBottle.setPercentage(this.collectedBottles * 20);
-        this.canThrow = false;
-        setTimeout(() => this.canThrow = true, 500);
+        this.throwBottle();
       }
       this.throwableObjects = this.throwableObjects.filter(obj => !obj.markedForDeletion);
     }, 100);
+  }
+
+  /** Creates and launches a bottle in the character's current facing direction. */
+  throwBottle() {
+    const direction = this.character.otherDirection ? -1 : 1;
+    const bottle = new ThrowableObject(this.character.x + 50, this.character.y + 100, direction);
+    bottle.breakSound.muted = isMuted;
+    this.throwableObjects.push(bottle);
+    this.collectedBottles--;
+    this.statusbarBottle.setPercentage(this.collectedBottles * 20);
+    this.canThrow = false;
+    setTimeout(() => this.canThrow = true, 500);
   }
 }

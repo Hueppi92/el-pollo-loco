@@ -4,26 +4,27 @@
  * to the on-screen mobile control buttons.
  */
 class Keyboard {
-    /** @type {boolean} Whether the left-arrow / left-button is held down. */
     LEFT = false;
-    /** @type {boolean} Whether the right-arrow / right-button is held down. */
     RIGHT = false;
-    /** @type {boolean} Whether the up-arrow / jump-button is held down. */
     UP = false;
-    /** @type {boolean} Whether the down-arrow is held down. */
     DOWN = false;
-    /** @type {boolean} Whether the Space key is held down. */
     SPACE = false;
-    /** @type {boolean} Whether the D key or throw-button is held down. */
     D = false;
 
+    /** Binds all keyboard and touch-button event listeners. */
     constructor() {
         this.bindKeyPressEvents();
         this.bindBtsPressEvents();
     }
 
-    /** Binds {@link KeyboardEvent} listeners on the window to track arrow keys and Space. */
+    /** Binds keydown and keyup listeners on the window to track arrow keys and Space. */
     bindKeyPressEvents() {
+        this.bindKeyDown();
+        this.bindKeyUp();
+    }
+
+    /** Registers the keydown handler that sets key flags to true. */
+    bindKeyDown() {
         window.addEventListener('keydown', e => {
             if (e.code === 'ArrowLeft')  { this.LEFT  = true; e.preventDefault(); }
             if (e.code === 'ArrowRight') { this.RIGHT = true; e.preventDefault(); }
@@ -31,6 +32,10 @@ class Keyboard {
             if (e.code === 'ArrowDown')  { this.DOWN  = true; e.preventDefault(); }
             if (e.code === 'Space')      { this.D = true; this.SPACE = true; e.preventDefault(); }
         });
+    }
+
+    /** Registers the keyup handler that resets key flags to false. */
+    bindKeyUp() {
         window.addEventListener('keyup', e => {
             if (e.code === 'ArrowLeft')  { this.LEFT  = false; e.preventDefault(); }
             if (e.code === 'ArrowRight') { this.RIGHT = false; e.preventDefault(); }
@@ -45,18 +50,25 @@ class Keyboard {
      * that the corresponding key flag is set while the button is pressed.
      */
     bindBtsPressEvents() {
-        const bind = (id, key) => {
-            const btn = document.getElementById(id);
-            if (!btn) return;
-            btn.addEventListener('touchstart', e => { e.preventDefault(); this[key] = true; },  { passive: false });
-            btn.addEventListener('touchend',   e => { e.preventDefault(); this[key] = false; }, { passive: false });
-            btn.addEventListener('mousedown',  e => { this[key] = true; });
-            btn.addEventListener('mouseup',    e => { this[key] = false; });
-            btn.addEventListener('mouseleave', e => { this[key] = false; });
-        };
-        bind('btnLeft',  'LEFT');
-        bind('btnRight', 'RIGHT');
-        bind('btnJump',  'UP');
-        bind('btnThrow', 'D');
+        this.bindButton('btnLeft',  'LEFT');
+        this.bindButton('btnRight', 'RIGHT');
+        this.bindButton('btnJump',  'UP');
+        this.bindButton('btnThrow', 'D');
+    }
+
+    /**
+     * Attaches touchstart, touchend, mousedown, mouseup, and mouseleave listeners
+     * to a single on-screen button so the given key flag tracks its pressed state.
+     * @param {string} id  - The DOM id of the button element.
+     * @param {string} key - The Keyboard property name to toggle (e.g. 'LEFT').
+     */
+    bindButton(id, key) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('touchstart', e => { e.preventDefault(); this[key] = true; },  { passive: false });
+        btn.addEventListener('touchend',   e => { e.preventDefault(); this[key] = false; }, { passive: false });
+        btn.addEventListener('mousedown',  () => { this[key] = true; });
+        btn.addEventListener('mouseup',    () => { this[key] = false; });
+        btn.addEventListener('mouseleave', () => { this[key] = false; });
     }
 }

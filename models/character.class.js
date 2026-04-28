@@ -6,7 +6,6 @@ class Character extends movableObject {
   width = 110;
   height = 280;
 
-  /** Tighter collision box – the Pepe sprite has large transparent borders. */
   offsetTop    = 100;
   offsetBottom =  14;
   offsetLeft   =  24;
@@ -81,12 +80,9 @@ walking_sound = new Audio(this.SOUNDS_PEPE[0]);
 jumping_sound = new Audio(this.SOUNDS_PEPE[1]);
 hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
 
-  /** @type {World} Reference to the game world, set after the world is constructed. */
   world;
   currentImage = 0;
-  /** Timestamp of the last movement input, used to detect long idle periods. */
   lastMoveTime = Date.now();
-  /** True once the character has been idle for more than 5 seconds. */
   isIdleLong = false;
 
   /** Preloads all animation frames and starts the movement and animation loops. */

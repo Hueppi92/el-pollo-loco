@@ -4,10 +4,7 @@
  * @extends DrawableObject
  */
 class Statusbar extends DrawableObject {
-  /** @type {string[]} The six image paths for 0 / 20 / 40 / 60 / 80 / 100 %. */
   IMAGES = [];
-
-  /** @type {number} Current percentage value (0–100). */
   percentage = 100;
 
   /**

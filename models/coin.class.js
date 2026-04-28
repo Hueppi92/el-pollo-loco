@@ -4,16 +4,13 @@
  * @extends movableObject
  */
 class Coin extends movableObject {
-  /** @type {number} Render width in pixels. */
   width = 80;
-  /** @type {number} Render height in pixels. */
   height = 80;
   offsetTop = 15;
   offsetBottom = 15;
   offsetLeft = 20;
   offsetRight = 20;
 
-  /** @type {string[]} Two-frame animation cycle for the spinning coin. */
   IMAGES = [
     'img/8_coin/coin_1.png',
     'img/8_coin/coin_2.png',

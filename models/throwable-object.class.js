@@ -27,7 +27,6 @@ class ThrowableObject extends movableObject {
   groundY = 350;
   breakSound = (() => { const a = new Audio('audio/world_sounds/bottle_break.mp3'); a.load(); return a; })();
 
-  /** Slightly reduced hitbox – the bottle sprite has transparent padding on all sides. */
   offsetTop    = 10;
   offsetBottom = 10;
   offsetLeft   = 10;
@@ -64,16 +63,21 @@ class ThrowableObject extends movableObject {
       if (this.y >= this.groundY) {
         if (!this.isSplashing) this.splash();
       } else {
-        this.y -= this.speedY;
-        this.speedY -= this.acceleration;
-        this.x += this.speedX * this.direction;
-        if (this.y >= this.groundY - 30 && !this.soundTriggered) {
-          this.soundTriggered = true;
-          this.breakSound.currentTime = 0;
-          this.breakSound.play().catch(() => {});
-        }
+        this.tickPhysics();
       }
     }, 1000 / 60);
+  }
+
+  /** Advances position and speed by one tick; plays break sound when near ground. */
+  tickPhysics() {
+    this.y -= this.speedY;
+    this.speedY -= this.acceleration;
+    this.x += this.speedX * this.direction;
+    if (this.y >= this.groundY - 30 && !this.soundTriggered) {
+      this.soundTriggered = true;
+      this.breakSound.currentTime = 0;
+      this.breakSound.play().catch(() => {});
+    }
   }
 
   /** Cycles through the appropriate animation frames each animation tick. */
