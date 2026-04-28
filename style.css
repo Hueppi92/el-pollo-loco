@@ -380,46 +380,47 @@ canvas {
    MOBILE – portrait: show rotate hint, hide everything else
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Rotate overlay – controlled via JS (.visible class) ────────────────── */
 #rotateOverlay {
     display: none;
+}
+
+#rotateOverlay.visible {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #1a0a00;
+}
+
+#rotateOverlay.visible p {
+    color: #f9d342;
+    font-family: 'Rye', serif;
+    font-size: clamp(1rem, 4vw, 1.6rem);
+    text-align: center;
+    padding: 0 24px;
+    margin: 0;
+}
+
+#rotateIcon {
+    font-size: clamp(3rem, 12vw, 5rem);
+    animation: rotateHint 1.8s ease-in-out infinite;
+    transform-origin: center;
+    display: inline-block;
+}
+
+body.portrait-mode > *:not(#rotateOverlay) {
+    visibility: hidden;
 }
 
 @media (orientation: portrait) {
     body.is-mobile {
         overflow: hidden;
         height: 100dvh;
-    }
-
-    body.is-mobile #rotateOverlay {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 24px;
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: #1a0a00;
-    }
-
-    body.is-mobile #rotateOverlay p {
-        color: #f9d342;
-        font-family: 'Rye', serif;
-        font-size: clamp(1rem, 4vw, 1.6rem);
-        text-align: center;
-        padding: 0 24px;
-        margin: 0;
-    }
-
-    body.is-mobile #rotateIcon {
-        font-size: clamp(3rem, 12vw, 5rem);
-        animation: rotateHint 1.8s ease-in-out infinite;
-        transform-origin: center;
-        display: inline-block;
-    }
-
-    body.is-mobile > *:not(#rotateOverlay) {
-        visibility: hidden;
     }
 }
 

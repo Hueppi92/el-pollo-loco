@@ -16,6 +16,7 @@ class Chicken extends movableObject {
   dead_sound = new Audio('audio/enemy/chicken_dead.mp3');
   deadSoundPlayed = false;
 
+  /** Preloads sprites and randomises the chicken's starting position and speed. */
   constructor() {
     super();
     this.loadImage("img/3_enemies_chicken/chicken_normal/1_walk/1_w.png");
@@ -25,10 +26,15 @@ class Chicken extends movableObject {
     this.speed = 0.15 + Math.random() * 0.3; // Random speed between 0.15 and 0.45
   }
 
+  /**
+   * Returns true if the chicken has no health remaining.
+   * @returns {boolean}
+   */
   isDead() {
     return this.health <= 0;
   }
 
+  /** Starts the movement loop (60 fps) and the walking/dead animation loop (6–7 fps). */
   animate() {
     setStoppableInterval(() => {
       if (!this.isDead()) this.x -= this.speed;

@@ -1,19 +1,33 @@
 /**
  * Returns {@code true} when the page is running on a real mobile device.
  * Prefers the modern {@link NavigatorUAData.mobile} hint; falls back to
- * checking for coarse-pointer (touch-primary) input with a phone-sized screen.
+ * checking for coarse-pointer (touch-primary) input.
  * @returns {boolean}
  */
 function detectMobile() {
     if (navigator.userAgentData?.mobile != null) return navigator.userAgentData.mobile;
-    const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    return coarsePointer && window.screen.width <= 1024;
+    return window.matchMedia('(pointer: coarse)').matches;
+}
+
+/**
+ * Shows or hides the portrait-mode rotate overlay based on the current viewport
+ * dimensions. Works in DevTools responsive mode and on real devices because it
+ * uses {@link window.innerWidth} / {@link window.innerHeight} rather than
+ * {@link screen.width}.
+ */
+function updateRotateOverlay() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isSmallViewport = window.innerWidth < 900;
+    const show = isPortrait && isSmallViewport;
+    document.getElementById('rotateOverlay').classList.toggle('visible', show);
+    document.body.classList.toggle('portrait-mode', show);
 }
 
 /**
  * Runs once the DOM is ready. Detects mobile devices to apply the
  * {@code is-mobile} class (enables the rotate-hint and mobile layout),
- * shows touch controls, and restores the mute button icon.
+ * shows touch controls, restores the mute button icon, and performs the
+ * initial rotate-overlay check.
  */
 document.addEventListener('DOMContentLoaded', () => {
     const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
@@ -24,7 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mobileControls').style.display = 'flex';
     }
     document.getElementById('muteBtn').textContent = isMuted ? '🔇' : '🔊';
+    updateRotateOverlay();
 });
+
+window.addEventListener('resize', updateRotateOverlay);
+window.addEventListener('orientationchange', updateRotateOverlay);
 
 /** @type {HTMLCanvasElement} The main game canvas element. */
 let canvas;

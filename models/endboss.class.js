@@ -44,16 +44,16 @@ class Endboss extends movableObject {
   hurtTimestamp = 0;
   lungeTimestamp = 0;
   health = 6;
-  speed = 2.5;
+  speed = 4;
   hurtDuration = 500;
   hitBlockDuration = 1300;
   offsetTop = 40;
   offsetBottom = 20;
   offsetLeft = 30;
   offsetRight = 30;
-  lungeSpeed = 14;
-  lungeDuration = 500;
-  attackRange = 250;
+  lungeSpeed = 18;
+  lungeDuration = 600;
+  attackRange = 500;
   hurt_sound = new Audio('audio/enemy/boss_chicken_hurt.mp3');
 
   constructor() {
@@ -119,6 +119,7 @@ class Endboss extends movableObject {
     return Math.abs(this.x - character.x) < this.attackRange;
   }
 
+  /** Starts all three recurring loops: movement/physics, lunge trigger, and sprite animation. */
   animate() {
     // Movement — walk toward character once activated; lunge through them when in attack range
     setStoppableInterval(() => {
@@ -133,11 +134,11 @@ class Endboss extends movableObject {
       }
     }, 1000 / 60);
 
-    // Lunge trigger — charge every ~2 s when the character is within attack range
+    // Lunge trigger — charge every ~1 s when the character is within attack range
     setStoppableInterval(() => {
       if (!this.activated || this.isDead() || this.isCurrentlyHurt() || this.isLunging()) return;
       if (this.world && this.isNearCharacter(this.world.character)) this.lunge();
-    }, 2000);
+    }, 1000);
 
     // Animation state
     setStoppableInterval(() => {

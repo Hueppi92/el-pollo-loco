@@ -6,6 +6,9 @@ class Bottle extends movableObject {
   offsetLeft = 30;
   offsetRight = 18;
 
+  /**
+   * @param {number} x - Horizontal position of the bottle on the ground.
+   */
   constructor(x) {
     super();
     this.loadImage('img/6_salsa_bottle/1_salsa_bottle_on_ground.png');

@@ -310,7 +310,7 @@ class World {
   checkBottleBoxCollect() {
     setStoppableInterval(() => {
       this.level.bottleBoxes = this.level.bottleBoxes.filter(box => {
-        if (this.character.isColliding(box)) {
+        if (this.character.isColliding(box) && this.collectedBottles < this.maxBottles) {
           this.collectedBottles = this.maxBottles;
           this.statusbarBottle.setPercentage(100);
           return false;
