@@ -44,17 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('resize', updateRotateOverlay);
 window.addEventListener('orientationchange', updateRotateOverlay);
 
-/** @type {HTMLCanvasElement} The main game canvas element. */
 let canvas;
-/** @type {World} The active world instance containing all game objects and logic. */
 let world;
-/** @type {Keyboard} Tracks which keys / touch buttons are currently pressed. */
 let keyboard;
-/** @type {boolean} Whether the game has been started at least once (hides the start screen). */
 let gameStarted = false;
-/** @type {number[]} IDs of all active intervals, cleared on {@link stopGame}. */
 let intervalIds = [];
-/** @type {boolean} Global mute state – persisted in localStorage so it survives page reloads. */
 let isMuted = localStorage.getItem('elPollo_muted') === 'true';
 
 /**
