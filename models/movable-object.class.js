@@ -1,5 +1,6 @@
 
 class movableObject extends DrawableObject {
+  static globalMovementLock = false;
   speed = 0.15;
   otherDirection = false;
   speedY = 0;
@@ -18,6 +19,7 @@ class movableObject extends DrawableObject {
   /** Applies gravity by continuously pulling the object toward its ground level. */
   applyGravity() {
     setStoppableInterval(() => {
+      if (movableObject.globalMovementLock) return;
       if (this.y > this.groundY) {
         this.y = this.groundY;
         this.speedY = 0;
@@ -31,11 +33,13 @@ class movableObject extends DrawableObject {
 
   /** Moves the object to the right by its current speed. */
   moveRight() {
+    if (movableObject.globalMovementLock) return;
     this.x += this.speed;
   }
 
   /** Moves the object to the left by its current speed. */
   moveLeft() {
+    if (movableObject.globalMovementLock) return;
     this.x -= this.speed;
   }
 
@@ -61,8 +65,16 @@ class movableObject extends DrawableObject {
    */
   isFallingOnTop(mo) {
     const thisBottom = this.y + this.height - this.offsetBottom;
+    const previousBottom = thisBottom + this.speedY;
     const otherTop = mo.y + mo.offsetTop;
-    return this.speedY < 0 && thisBottom <= otherTop + 20;
+    const stompTolerance = 50;
+    const isDescending = this.speedY < 0;
+
+    // True when the character's feet crossed the enemy top between frames.
+    const crossedEnemyTop = previousBottom <= otherTop + stompTolerance;
+    const feetNearEnemyTop = thisBottom >= otherTop - 5;
+
+    return isDescending && crossedEnemyTop && feetNearEnemyTop;
   }
 
   /**

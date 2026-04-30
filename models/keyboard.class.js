@@ -10,11 +10,28 @@ class Keyboard {
     DOWN = false;
     SPACE = false;
     D = false;
+    inputLocked = false;
 
     /** Binds all keyboard and touch-button event listeners. */
     constructor() {
         this.bindKeyPressEvents();
         this.bindBtsPressEvents();
+    }
+
+    /** Locks or unlocks input handling and clears any pressed-state flags when locking. */
+    lockInputs(locked) {
+        this.inputLocked = locked;
+        if (locked) this.resetPressedStates();
+    }
+
+    /** Resets every tracked input flag to false. */
+    resetPressedStates() {
+        this.LEFT = false;
+        this.RIGHT = false;
+        this.UP = false;
+        this.DOWN = false;
+        this.SPACE = false;
+        this.D = false;
     }
 
     /** Binds keydown and keyup listeners on the window to track arrow keys and Space. */
@@ -26,6 +43,7 @@ class Keyboard {
     /** Registers the keydown handler that sets key flags to true. */
     bindKeyDown() {
         window.addEventListener('keydown', e => {
+            if (this.inputLocked) { e.preventDefault(); return; }
             if (e.code === 'ArrowLeft')  { this.LEFT  = true; e.preventDefault(); }
             if (e.code === 'ArrowRight') { this.RIGHT = true; e.preventDefault(); }
             if (e.code === 'ArrowUp')    { this.UP    = true; e.preventDefault(); }
@@ -65,9 +83,16 @@ class Keyboard {
     bindButton(id, key) {
         const btn = document.getElementById(id);
         if (!btn) return;
-        btn.addEventListener('touchstart', e => { e.preventDefault(); this[key] = true; },  { passive: false });
+        btn.addEventListener('touchstart', e => {
+            e.preventDefault();
+            if (this.inputLocked) return;
+            this[key] = true;
+        },  { passive: false });
         btn.addEventListener('touchend',   e => { e.preventDefault(); this[key] = false; }, { passive: false });
-        btn.addEventListener('mousedown',  () => { this[key] = true; });
+        btn.addEventListener('mousedown',  () => {
+            if (this.inputLocked) return;
+            this[key] = true;
+        });
         btn.addEventListener('mouseup',    () => { this[key] = false; });
         btn.addEventListener('mouseleave', () => { this[key] = false; });
     }

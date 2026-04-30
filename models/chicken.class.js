@@ -37,6 +37,7 @@ class Chicken extends movableObject {
   /** Starts the movement loop (60 fps) and the walking/dead animation loop (6–7 fps). */
   animate() {
     setStoppableInterval(() => {
+      if (movableObject.globalMovementLock) return;
       if (!this.isDead()) this.x -= this.speed;
     }, 1000 / 60);
     setStoppableInterval(() => {

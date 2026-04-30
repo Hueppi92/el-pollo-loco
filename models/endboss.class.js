@@ -43,17 +43,21 @@ class Endboss extends movableObject {
   activated = false;
   hurtTimestamp = 0;
   lungeTimestamp = 0;
+  lungeCooldownTimestamp = 0;
+  maxHealth = 6;
   health = 6;
-  speed = 4;
+  speed = 2.4;
   hurtDuration = 500;
   hitBlockDuration = 1300;
   offsetTop = 40;
   offsetBottom = 20;
   offsetLeft = 30;
   offsetRight = 30;
-  lungeSpeed = 18;
-  lungeDuration = 600;
-  attackRange = 500;
+  lungeSpeed = 11;
+  lungeDuration = 450;
+  lungeCooldown = 1600;
+  attackRange = 420;
+  keepDistance = 130;
   hurt_sound = new Audio('audio/enemy/boss_chicken_hurt.mp3');
 
   /** Preloads all animation frames and sets the boss's initial position. */
@@ -120,6 +124,11 @@ class Endboss extends movableObject {
     return Math.abs(this.x - character.x) < this.attackRange;
   }
 
+  /** Returns the current health as a status-bar percentage (0-100). */
+  getHealthPercentage() {
+    return (this.health / this.maxHealth) * 100;
+  }
+
   /** Starts all three recurring loops: movement/physics, lunge trigger, and sprite animation. */
   animate() {
     this.startMovementLoop();
@@ -127,26 +136,52 @@ class Endboss extends movableObject {
     this.startAnimationLoop();
   }
 
+  /** Returns whether the movement loop should skip this frame. */
+  shouldSkipMovementLoop() {
+    return movableObject.globalMovementLock || !this.activated || this.isDead() || this.isCurrentlyHurt() || !this.world;
+  }
+
+  /** Collects the current movement state relative to the character. */
+  getMovementState() {
+    const charX = this.world.character.x;
+    const distance = Math.abs(charX - this.x);
+    const currentSpeed = this.isLunging() ? this.lungeSpeed : this.speed;
+    const shouldRetreat = !this.isLunging() && distance < this.keepDistance;
+    const shouldMove = this.isLunging() || shouldRetreat || !this.isNearCharacter(this.world.character);
+    return { charX, currentSpeed, shouldRetreat, shouldMove };
+  }
+
+  /** Moves the boss according to the current character position. */
+  moveByState({ charX, currentSpeed, shouldRetreat }) {
+    if (shouldRetreat) {
+      this.x += charX < this.x ? currentSpeed : -currentSpeed;
+      this.otherDirection = charX > this.x;
+      return;
+    }
+    this.x += charX < this.x ? -currentSpeed : currentSpeed;
+    this.otherDirection = charX >= this.x;
+  }
+
   /** Walks toward the character each frame; uses lunge speed during a charge. */
   startMovementLoop() {
     setStoppableInterval(() => {
-      if (!this.activated || this.isDead() || this.isCurrentlyHurt() || !this.world) return;
-      const charX = this.world.character.x;
-      const currentSpeed = this.isLunging() ? this.lungeSpeed : this.speed;
-      const shouldMove = this.isLunging() || !this.isNearCharacter(this.world.character);
-      if (shouldMove) {
-        if (charX < this.x) { this.x -= currentSpeed; this.otherDirection = false; }
-        else                { this.x += currentSpeed; this.otherDirection = true; }
-      }
+      if (this.shouldSkipMovementLoop()) return;
+      const movementState = this.getMovementState();
+      if (!movementState.shouldMove) return;
+      this.moveByState(movementState);
     }, 1000 / 60);
   }
 
   /** Triggers a lunge charge every second when the character is within attack range. */
   startLungeLoop() {
     setStoppableInterval(() => {
-      if (!this.activated || this.isDead() || this.isCurrentlyHurt() || this.isLunging()) return;
-      if (this.world && this.isNearCharacter(this.world.character)) this.lunge();
-    }, 1000);
+      if (movableObject.globalMovementLock || !this.activated || this.isDead() || this.isCurrentlyHurt() || this.isLunging()) return;
+      if (Date.now() - this.lungeCooldownTimestamp < this.lungeCooldown) return;
+      if (this.world && this.isNearCharacter(this.world.character)) {
+        this.lungeCooldownTimestamp = Date.now();
+        this.lunge();
+      }
+    }, 200);
   }
 
   /** Updates the boss sprite to match the current state each animation tick. */

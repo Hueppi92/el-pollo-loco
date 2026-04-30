@@ -108,6 +108,10 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
   /** Reads keyboard input, moves the character, and updates the camera position. */
   moveCharacter() {
     if (!this.world || this.isDead()) return;
+    if (this.world.isMovementLocked()) {
+      this.updateWalkingSound(false);
+      return;
+    }
     this.walking_sound.playbackRate = 2.5;
     const isWalkingOnGround = !this.isAboveGround() && (this.canMoveRight() || this.canMoveLeft());
     this.updateWalkingSound(isWalkingOnGround);
@@ -213,6 +217,10 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
     if (this.isDead()) { this.playAnimation(this.IMAGES_DEAD); return; }
     if (this.isHurt()) { this.playAnimation(this.IMAGES_HURT); return; }
     if (this.isAboveGround()) { this.playAnimation(this.IMAGES_JUMPING); return; }
+    if (this.world.isMovementLocked()) {
+      this.playAnimation(this.IMAGES_IDLE);
+      return;
+    }
     if (this.world.keyboard.RIGHT || this.world.keyboard.LEFT) {
       this.playAnimation(this.IMAGES_WALKING);
     } else if (this.isIdleLong) {

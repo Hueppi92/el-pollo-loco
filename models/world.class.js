@@ -26,6 +26,15 @@ class World {
     'img/7_statusbars/1_statusbar/3_statusbar_bottle/green/100.png',
   ];
 
+  static ENDBOSS_IMAGES = [
+    'img/7_statusbars/2_statusbar_endboss/green/green0.png',
+    'img/7_statusbars/2_statusbar_endboss/green/green20.png',
+    'img/7_statusbars/2_statusbar_endboss/green/green40.png',
+    'img/7_statusbars/2_statusbar_endboss/green/green60.png',
+    'img/7_statusbars/2_statusbar_endboss/green/green80.png',
+    'img/7_statusbars/2_statusbar_endboss/green/green100.png',
+  ];
+
   character = new Character();
   enemies = level1.enemies;
   clouds = level1.clouds;
@@ -35,6 +44,7 @@ class World {
   statusbarHealth;
   statusbarCoin;
   statusbarBottle;
+  statusbarEndboss;
 
   throwableObjects = [];
   pendingBottleRespawns = [];
@@ -46,7 +56,10 @@ class World {
   bottleRespawnDelay = 8000;
 
   enemyDamage = 5;
+  endbossDamage = 6;
   characterDamage = 5;
+  endbossDamageCooldown = 1200;
+  lastEndbossDamageTimestamp = 0;
 
   ctx;
   canvas;
@@ -59,6 +72,7 @@ class World {
   loseSound = new Audio("audio/world_sounds/lost.mp3");
   coinSound = new Audio("audio/world_sounds/coin_collect.mp3");
   endSoundPlayed = false;
+  movementLocked = false;
   gameEnded = false;
 
   /**
@@ -83,6 +97,25 @@ class World {
     this.statusbarHealth = new Statusbar(World.HEALTH_IMAGES, 20, 10, 100);
     this.statusbarCoin   = new Statusbar(World.COIN_IMAGES,   20, 68, 0);
     this.statusbarBottle = new Statusbar(World.BOTTLE_IMAGES, 20, 126, 0);
+    this.statusbarEndboss = new Statusbar(World.ENDBOSS_IMAGES, this.canvas.width - 220, 10, 100);
+  }
+
+  /** Returns whether movement and combat are currently locked for the intro cinematic. */
+  isMovementLocked() {
+    return this.movementLocked;
+  }
+
+  /** Locks or unlocks movement globally for all movable entities. */
+  lockMovement(locked) {
+    this.movementLocked = locked;
+    movableObject.globalMovementLock = locked;
+    this.keyboard.lockInputs(locked);
+    if (locked) this.character.updateWalkingSound(false);
+  }
+
+  /** Returns whether the character is in the correct position and on the ground for the boss intro. */
+  canActivateEndboss() {
+    return !this.endSoundPlayed && !this.character.isAboveGround() && this.character.x > this.level_end_x - 600;
   }
 
   /** Assigns the world reference to the character and endboss. */
@@ -136,6 +169,9 @@ class World {
     this.ctx.translate(-this.camera_x, 0);
     this.drawHUD();
     this.checkEndbossActivation();
+     this.ctx.translate(this.camera_x, 0);
+    this.addToMap(this.character);
+    this.ctx.translate(-this.camera_x, 0);
     this._rafId = requestAnimationFrame(() => this.draw());
   }
 
@@ -148,7 +184,8 @@ class World {
     this.addObjectsToMap(this.level.coins);
     this.addObjectsToMap(this.enemies);
     this.addObjectsToMap(this.throwableObjects);
-    this.addToMap(this.character);
+    this.drawEndbossBar();
+    
   }
 
   /** Draws the fixed HUD status bars on top of the world. */
@@ -158,21 +195,52 @@ class World {
     this.addToMap(this.statusbarBottle);
   }
 
+  /** Draws the boss health bar attached to the boss sprite instead of the fixed HUD. */
+  drawEndbossBar() {
+    if (!this.endboss || !this.endboss.activated || this.endboss.isDead()) return;
+
+    this.statusbarEndboss.x = this.endboss.x + (this.endboss.width - this.statusbarEndboss.width) / 2;
+    this.statusbarEndboss.y = this.endboss.y + 25;
+    this.statusbarEndboss.setPercentage(this.endboss.getHealthPercentage());
+    this.addToMap(this.statusbarEndboss);
+  }
+
+  /** Starts the endboss intro state before the showdown sound begins. */
+  prepareEndbossActivation() {
+    this.endSoundPlayed = true;
+    this.lockMovement(true);
+    if (this.endboss) this.endboss.activated = false;
+    this.bg_audio.pause();
+    this.endSound.currentTime = 0;
+    this.endSound.volume = 1;
+    this.endSound.playbackRate = 1.0;
+  }
+
+  /** Unlocks movement, activates the boss, and resumes battle music. */
+  finishEndbossActivation() {
+    this.lockMovement(false);
+    if (this.endboss) this.endboss.activated = true;
+    this.bg_audio.playbackRate = 1.4;
+    this.bg_audio.play().catch(() => {});
+  }
+
+  /** Starts the showdown sound and wires the fallback and completion handlers. */
+  playEndbossIntroSound() {
+    this.endSound.play().catch(() => {
+      this.lockMovement(false);
+      if (this.endboss) this.endboss.activated = true;
+    });
+    this.endSound.onended = () => this.finishEndbossActivation();
+  }
+
   /**
    * Triggers the endboss encounter audio and activates the endboss
    * when the character is close enough to the end of the level.
    */
   checkEndbossActivation() {
-    if (this.endSoundPlayed || this.character.x <= this.level_end_x - 800) return;
-    this.bg_audio.pause();
-    this.endSound.play().catch(() => {});
-    this.endSound.playbackRate = 1.0;
-    this.endSound.onended = () => {
-      this.bg_audio.playbackRate = 1.4;
-      this.bg_audio.play().catch(() => {});
-    };
-    this.endSoundPlayed = true;
-    if (this.endboss) this.endboss.activated = true;
+    if (!this.canActivateEndboss()) return;
+    this.prepareEndbossActivation();
+    this.playEndbossIntroSound();
   }
 
   /**
@@ -222,12 +290,15 @@ class World {
   /** Periodically tests character-vs-enemy collisions and dispatches the appropriate handler. */
   checkCollisions() {
     setStoppableInterval(() => {
-      this.level.enemies.forEach((enemy) => {
-        if (enemy.isDead()) return;
-        if (this.character.isColliding(enemy) && !this.character.isDead()) {
-          this.handleEnemyCollision(enemy);
-        }
-      });
+      if (this.isMovementLocked() || this.character.isDead()) return;
+      const collidingEnemies = this.level.enemies.filter(
+        (enemy) => !enemy.isDead() && this.character.isColliding(enemy)
+      );
+      if (!collidingEnemies.length) return;
+      const stompedEnemies = collidingEnemies.filter((enemy) => this.character.isFallingOnTop(enemy));
+      stompedEnemies.length
+        ? stompedEnemies.forEach((enemy) => this.handleEnemyCollision(enemy, true))
+        : this.handleDamageToCharacter();
     }, 1000 / 60);
   }
 
@@ -235,16 +306,28 @@ class World {
    * Decides whether the character lands on top of an enemy or takes damage.
    * @param {movableObject} enemy - The enemy the character collided with.
    */
-  handleEnemyCollision(enemy) {
-    if (this.character.isFallingOnTop(enemy)) {
+  handleEnemyCollision(enemy, isStomp = this.character.isFallingOnTop(enemy)) {
+    if (isStomp) {
       if (enemy instanceof Endboss) {
         this.character.speedY = 15;
       } else {
         this.handleDamageToEnemy(enemy);
       }
+    } else if (enemy instanceof Endboss) {
+      this.handleEndbossContactDamage(enemy);
     } else {
       this.handleDamageToCharacter();
     }
+  }
+
+  /** Applies less frequent contact damage from the endboss to avoid unavoidable "stick" hits. */
+  handleEndbossContactDamage(enemy) {
+    if (Date.now() - this.lastEndbossDamageTimestamp < this.endbossDamageCooldown) return;
+    this.lastEndbossDamageTimestamp = Date.now();
+    this.handleDamageToCharacter(this.endbossDamage);
+    const push = this.character.x < enemy.x ? -45 : 45;
+    this.character.x = Math.max(0, Math.min(this.level_end_x - this.character.width, this.character.x + push));
+    this.character.speedY = 8;
   }
 
   /**
@@ -261,9 +344,9 @@ class World {
   }
 
   /** Deals one hit of enemy damage to the character if the hurt cooldown has expired. */
-  handleDamageToCharacter() {
+  handleDamageToCharacter(damage = this.enemyDamage) {
     if (!this.character.isHurt()) {
-      this.character.handleDamage(this.enemyDamage);
+      this.character.handleDamage(damage);
       this.character.handleHurt();
     }
   }
@@ -335,6 +418,7 @@ class World {
   handleBottleEnemyCollision(bottle, enemy) {
     if (enemy.isDead() || !bottle.isColliding(enemy)) return;
     if (enemy instanceof Endboss) {
+      if (!enemy.activated) return;
       this.handleBottleHitEndboss(bottle, enemy);
     } else {
       enemy.health = 0;
@@ -354,6 +438,7 @@ class World {
   handleBottleHitEndboss(bottle, enemy) {
     if (!enemy.isHitBlocked()) {
       enemy.takeHit();
+      this.statusbarEndboss.setPercentage(enemy.getHealthPercentage());
       bottle.splash();
     }
     if (enemy.isDead()) {
@@ -412,6 +497,10 @@ class World {
   /** Periodically handles bottle throwing input and cleans up deleted bottle objects. */
   checkThrow() {
     setStoppableInterval(() => {
+      if (this.isMovementLocked()) {
+        this.throwableObjects = this.throwableObjects.filter(obj => !obj.markedForDeletion);
+        return;
+      }
       if ((this.keyboard.D || this.keyboard.SPACE) && this.canThrow && this.collectedBottles > 0) {
         this.throwBottle();
       }
