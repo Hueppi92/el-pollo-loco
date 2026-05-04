@@ -74,6 +74,16 @@ class World {
   endSoundPlayed = false;
   movementLocked = false;
   gameEnded = false;
+  bossIntroTriggerX = 1500;
+  bossIntroStartAlignDuration = 320;
+  bossIntroPanDuration = 850;
+  bossIntroPanSpeedFactor = 1.45;
+  bossIntroRightPadding = 55;
+  bossIntroLeftPadding = 45;
+  bossEntranceDuration = 1300;
+  bossEntranceSpawnOffset = 260;
+  bossEntranceDistanceToPepe = 360;
+  bossFightStartDelay = 2000;
 
   /**
    * @param {HTMLCanvasElement} canvas   - The game canvas element.
@@ -113,9 +123,25 @@ class World {
     if (locked) this.character.updateWalkingSound(false);
   }
 
-  /** Returns whether the character is in the correct position and on the ground for the boss intro. */
+  /** Returns true once Pepe reaches the fixed x-position that starts the boss intro. */
+  isCharacterAtBossTrigger() {
+    return this.character.x >= this.getBossIntroTriggerX();
+  }
+
+  /** Returns the maximum trigger x so intro starts no later than the first x of the last screen. */
+  getBossIntroTriggerX() {
+    const lastScreenStartX = Math.max(0, this.level_end_x - this.canvas.width);
+    return Math.min(this.bossIntroTriggerX, lastScreenStartX);
+  }
+
+  /** Returns the hard right boundary Pepe is not allowed to cross. */
+  getCharacterRightBoundaryX() {
+    return Math.min(this.level_end_x - this.character.width, this.getBossIntroTriggerX());
+  }
+
+  /** Returns whether intro conditions are met and Pepe is grounded. */
   canActivateEndboss() {
-    return !this.endSoundPlayed && !this.character.isAboveGround() && this.character.x > this.level_end_x - 600;
+    return !this.endSoundPlayed && !this.character.isAboveGround() && this.isCharacterAtBossTrigger();
   }
 
   /** Assigns the world reference to the character and endboss. */
@@ -182,10 +208,15 @@ class World {
     this.addObjectsToMap(this.level.bottles);
     this.addObjectsToMap(this.level.bottleBoxes);
     this.addObjectsToMap(this.level.coins);
-    this.addObjectsToMap(this.enemies);
+    this.addObjectsToMap(this.getRenderableEnemies());
     this.addObjectsToMap(this.throwableObjects);
     this.drawEndbossBar();
     
+  }
+
+  /** Returns enemies that should currently be drawn (boss stays hidden until intro starts). */
+  getRenderableEnemies() {
+    return this.enemies.filter((enemy) => !(enemy instanceof Endboss) || enemy.isVisible);
   }
 
   /** Draws the fixed HUD status bars on top of the world. */
@@ -205,7 +236,7 @@ class World {
     this.addToMap(this.statusbarEndboss);
   }
 
-  /** Starts the endboss intro state before the showdown sound begins. */
+  /** Starts the endboss intro state and freezes the regular gameplay loops. */
   prepareEndbossActivation() {
     this.endSoundPlayed = true;
     this.lockMovement(true);
@@ -216,21 +247,156 @@ class World {
     this.endSound.playbackRate = 1.0;
   }
 
+  /** Returns the minimum allowed camera x-value at the level end. */
+  getMinCameraX() {
+    return -(this.level_end_x - this.canvas.width);
+  }
+
+  /** Clamps a camera x-value to the valid horizontal level bounds. */
+  clampCameraX(cameraX) {
+    return Math.max(this.getMinCameraX(), Math.min(0, cameraX));
+  }
+
+  /** Returns the camera target where Pepe appears close to the left edge. */
+  getBossIntroCameraTarget() {
+    return this.clampCameraX(-(this.character.x - this.bossIntroLeftPadding));
+  }
+
+  /** Returns the camera target where Pepe appears close to the right edge. */
+  getBossIntroRightCameraTarget() {
+    const rightScreenX = this.canvas.width - this.character.width - this.bossIntroRightPadding;
+    return this.clampCameraX(-(this.character.x - rightScreenX));
+  }
+
+  /** Smoothly aligns the camera so Pepe starts near the right edge before the leftward pan begins. */
+  alignCameraForBossIntroStart() {
+    return this.animateCameraTo(this.getBossIntroRightCameraTarget(), this.bossIntroStartAlignDuration);
+  }
+
+  /** Smoothly animates camera_x to a target value over the given duration. */
+  animateCameraTo(targetCameraX, duration) {
+    const startCameraX = this.camera_x;
+    const deltaCamera = targetCameraX - startCameraX;
+
+    if (Math.abs(deltaCamera) < 1 || duration <= 0) {
+      this.camera_x = targetCameraX;
+      this.character.otherDirection = false;
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const startTime = performance.now();
+      const step = (now) => {
+        const progress = Math.min(1, (now - startTime) / duration);
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        this.camera_x = startCameraX + deltaCamera * easedProgress;
+        if (progress < 1) {
+          requestAnimationFrame(step);
+          return;
+        }
+        this.camera_x = targetCameraX;
+        this.character.otherDirection = false;
+        resolve();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  /** Smoothly pans the camera to the left while Pepe stays frozen in place. */
+  runBossIntroCameraPan() {
+    const targetCameraX = this.getBossIntroCameraTarget();
+    const effectiveDuration = this.bossIntroPanDuration / this.bossIntroPanSpeedFactor;
+    return this.animateCameraTo(targetCameraX, effectiveDuration);
+  }
+
+  /** Resolves after a fixed delay used to stage cinematic beats. */
+  wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /** Calculates boss spawn/target x values for the intro walk-in. */
+  getBossEntranceTargets() {
+    if (!this.endboss) return { startX: 0, targetX: 0 };
+    const viewportRight = -this.camera_x + this.canvas.width;
+    const startX = Math.max(this.endboss.x, viewportRight + this.bossEntranceSpawnOffset);
+    const safeDistance = Math.max(this.bossEntranceDistanceToPepe, this.endboss.attackRange + 90);
+    const desiredTargetX = this.character.x + safeDistance;
+    const maxBossX = this.level_end_x - this.endboss.width;
+    const targetX = Math.max(0, Math.min(maxBossX, desiredTargetX));
+    return { startX, targetX };
+  }
+
+  /** Plays a scripted boss walk-in from the right edge while gameplay is frozen. */
+  runBossEntrance() {
+    if (!this.endboss) return Promise.resolve();
+
+    const { startX, targetX } = this.getBossEntranceTargets();
+    const deltaX = targetX - startX;
+    this.endboss.isVisible = true;
+    this.endboss.x = startX;
+    this.endboss.otherDirection = false;
+
+    if (Math.abs(deltaX) < 1) {
+      this.endboss.x = targetX;
+      this.endboss.otherDirection = false;
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      const startTime = performance.now();
+      let lastFrameChange = 0;
+
+      const step = (now) => {
+        const progress = Math.min(1, (now - startTime) / this.bossEntranceDuration);
+        const easedProgress = 1 - Math.pow(1 - progress, 2);
+        this.endboss.x = startX + deltaX * easedProgress;
+        this.endboss.otherDirection = false;
+
+        if (now - lastFrameChange >= 110) {
+          this.endboss.playAnimation(this.endboss.IMAGES_WALKING);
+          lastFrameChange = now;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+          return;
+        }
+
+        this.endboss.x = targetX;
+        this.endboss.otherDirection = false;
+        resolve();
+      };
+
+      requestAnimationFrame(step);
+    });
+  }
+
   /** Unlocks movement, activates the boss, and resumes battle music. */
   finishEndbossActivation() {
+    this.endSound.pause();
+    this.endSound.currentTime = 0;
     this.lockMovement(false);
     if (this.endboss) this.endboss.activated = true;
     this.bg_audio.playbackRate = 1.4;
     this.bg_audio.play().catch(() => {});
   }
 
-  /** Starts the showdown sound and wires the fallback and completion handlers. */
+  /** Starts the cinematic showdown sound while camera-pan and boss entrance play. */
   playEndbossIntroSound() {
-    this.endSound.play().catch(() => {
-      this.lockMovement(false);
-      if (this.endboss) this.endboss.activated = true;
-    });
-    this.endSound.onended = () => this.finishEndbossActivation();
+    this.endSound.play().catch(() => {});
+  }
+
+  /** Runs the full intro sequence: freeze, camera pan, boss walk-in, then fight start. */
+  startEndbossIntroSequence() {
+    this.prepareEndbossActivation();
+    this.alignCameraForBossIntroStart()
+      .then(() => this.runBossIntroCameraPan())
+      .then(() => {
+        this.playEndbossIntroSound();
+        return this.runBossEntrance();
+      })
+      .then(() => this.wait(this.bossFightStartDelay))
+      .then(() => this.finishEndbossActivation());
   }
 
   /**
@@ -239,8 +405,7 @@ class World {
    */
   checkEndbossActivation() {
     if (!this.canActivateEndboss()) return;
-    this.prepareEndbossActivation();
-    this.playEndbossIntroSound();
+    this.startEndbossIntroSequence();
   }
 
   /**
@@ -326,7 +491,7 @@ class World {
     this.lastEndbossDamageTimestamp = Date.now();
     this.handleDamageToCharacter(this.endbossDamage);
     const push = this.character.x < enemy.x ? -45 : 45;
-    this.character.x = Math.max(0, Math.min(this.level_end_x - this.character.width, this.character.x + push));
+    this.character.x = Math.max(0, Math.min(this.getCharacterRightBoundaryX(), this.character.x + push));
     this.character.speedY = 8;
   }
 

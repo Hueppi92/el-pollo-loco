@@ -1,48 +1,46 @@
-class Chicken extends movableObject {
+class SmallChicken extends movableObject {
   IMAGES_WALKING = [
-    "img/3_enemies_chicken/chicken_normal/1_walk/1_w.png",
-    "img/3_enemies_chicken/chicken_normal/1_walk/2_w.png",
-    "img/3_enemies_chicken/chicken_normal/1_walk/3_w.png",
+    "img/3_enemies_chicken/chicken_small/1_walk/1_w.png",
+    "img/3_enemies_chicken/chicken_small/1_walk/2_w.png",
+    "img/3_enemies_chicken/chicken_small/1_walk/3_w.png",
   ];
 
   IMAGES_DEAD = [
-    "img/3_enemies_chicken/chicken_normal/2_dead/dead.png",
+    "img/3_enemies_chicken/chicken_small/2_dead/dead.png",
   ];
 
-  y = 335; // Ground level for the chicken
-  width = 70;
-  height = 80;
+  y = 360;
+  width = 55;
+  height = 65;
   health = 1;
   dead_sound = new Audio('audio/enemy/chicken_dead.mp3');
   deadSoundPlayed = false;
 
   /**
-   * Preloads sprites and initializes the chicken position.
+   * Preloads sprites and initializes the small chicken spawn position.
    * @param {number|null} startX - Optional fixed spawn x position.
    */
   constructor(startX = null) {
     super();
-    this.loadImage("img/3_enemies_chicken/chicken_normal/1_walk/1_w.png");
+    this.loadImage("img/3_enemies_chicken/chicken_small/1_walk/1_w.png");
     this.loadImages(this.IMAGES_WALKING);
     this.loadImages(this.IMAGES_DEAD);
-    this.x = startX ?? (200 + Math.random() * 500);
-    this.speed = 0.15 + Math.random() * 0.3; // Random speed between 0.15 and 0.45
+    this.x = startX ?? (220 + Math.random() * 550);
+    this.speed = 0.25 + Math.random() * 0.35;
   }
 
-  /**
-   * Returns true if the chicken has no health remaining.
-   * @returns {boolean}
-   */
+  /** Returns true if the small chicken has no health remaining. */
   isDead() {
     return this.health <= 0;
   }
 
-  /** Starts the movement loop (60 fps) and the walking/dead animation loop (6–7 fps). */
+  /** Starts movement and animation loops. */
   animate() {
     setStoppableInterval(() => {
       if (movableObject.globalMovementLock) return;
       if (!this.isDead()) this.x -= this.speed;
     }, 1000 / 60);
+
     setStoppableInterval(() => {
       if (this.isDead()) {
         this.playAnimation(this.IMAGES_DEAD);

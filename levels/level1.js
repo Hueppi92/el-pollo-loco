@@ -7,9 +7,14 @@
 function createLevel1() {
   return new Level(
     [
-        new Chicken(),  
-        new Chicken(),
-        new Chicken(),
+                new Chicken(320),
+                new SmallChicken(430),
+                new Chicken(560),
+                new SmallChicken(690),
+                new Chicken(840),
+                new Chicken(1010),
+                new SmallChicken(1180),
+                new Chicken(1360),
         new Endboss(),
     ],
     [

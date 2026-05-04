@@ -117,6 +117,7 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
     this.updateWalkingSound(isWalkingOnGround);
     if (this.canMoveRight()) this.moveRight();
     if (this.canMoveLeft()) this.moveLeft();
+    this.clampHorizontalPosition();
     if (this.canJump()) this.jump();
     if (!this.jumpAllowed && !this.isAboveGround()) this.jumpAllowed = true;
     this.updateIdleState();
@@ -129,7 +130,12 @@ hurt_sound    = new Audio(this.SOUNDS_PEPE[2]);
    * @returns {boolean}
    */
   canMoveRight() {
-    return this.world.keyboard.RIGHT && this.x < this.world.level_end_x - this.width;
+    return this.world.keyboard.RIGHT && this.x < this.world.getCharacterRightBoundaryX();
+  }
+
+  /** Clamps the character to the playable horizontal bounds, including the boss barrier. */
+  clampHorizontalPosition() {
+    this.x = Math.max(0, Math.min(this.world.getCharacterRightBoundaryX(), this.x));
   }
 
   /** Moves the character right and plays the walking sound when on the ground. */

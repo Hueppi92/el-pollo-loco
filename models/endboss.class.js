@@ -58,6 +58,7 @@ class Endboss extends movableObject {
   lungeCooldown = 1600;
   attackRange = 420;
   keepDistance = 130;
+  isVisible = false;
   hurt_sound = new Audio('audio/enemy/boss_chicken_hurt.mp3');
 
   /** Preloads all animation frames and sets the boss's initial position. */
@@ -68,7 +69,7 @@ class Endboss extends movableObject {
     this.loadImages(this.IMAGES_ATTACK);
     this.loadImages(this.IMAGES_HURT);
     this.loadImages(this.IMAGES_DEAD);
-    this.x = 1800;
+    this.x = 2600;
     this.y = 0;
     this.width = 300;
     this.height = 450;
